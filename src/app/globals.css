@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-dark: #0d0b1e;
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(255, 255, 255, 0.12);
+}
+
+body {
+  background: var(--bg-dark);
+  color: white;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* モバイル向け: スクロールバーを非表示 */
+::-webkit-scrollbar { width: 0; background: transparent; }
+
+/* ドラッグ中のカーソル */
+[data-dnd-dragging] { cursor: grabbing !important; }
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #f472b6, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-pink-500 to-purple-600
+           text-white font-bold py-3 px-6 rounded-2xl
+           active:scale-95 transition-transform
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply glass text-white font-semibold py-3 px-6 rounded-2xl
+           active:scale-95 transition-transform
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .input-field {
+    @apply glass w-full px-4 py-3 rounded-2xl text-white
+           placeholder-white/30 outline-none
+           focus:border-pink-400/50 focus:ring-2 focus:ring-pink-400/20
+           transition-all text-lg;
+  }
+}
