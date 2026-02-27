@@ -1,0 +1,169 @@
+'use client'
+
+import Link from 'next/link'
+import { getThemeItem } from '@/lib/themes'
+import type { RoomStateResponse } from '@/lib/types'
+
+interface Props {
+  gameState: RoomStateResponse
+  playerId: string
+  roomCode: string
+  onAction: (action: string, params?: Record<string, unknown>) => Promise<void>
+}
+
+function calcMostGuessed(guesses: Array<{ guess_top1: string }> | null) {
+  if (!guesses || guesses.length === 0) return null
+  const counts: Record<string, number> = {}
+  guesses.forEach(g => { counts[g.guess_top1] = (counts[g.guess_top1] ?? 0) + 1 })
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
+}
+
+export default function ResultScreen({ gameState, playerId, roomCode, onAction }: Props) {
+  const { room, players, theme, round, guesses, my_guess } = gameState
+  const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const asker = players.find(p => p.id === round?.asker_player_id)
+  const ranking = round?.ranking_json
+
+  const correctAnswer = ranking?.[0]  // 1位のitem_id
+  const myCorrect = my_guess === correctAnswer
+
+  const mostGuessed = calcMostGuessed(guesses)
+
+  if (!ranking || !theme) {
+    return <div className="min-h-dvh flex items-center justify-center">
+      <p className="text-white/40">読み込み中...</p>
+    </div>
+  }
+
+  return (
+    <div className="min-h-dvh flex flex-col px-4 py-8">
+      <div className="text-center mb-5 animate-fade-in">
+        <p className="text-white/40 text-xs mb-1">ラウンド {room.current_round}</p>
+        <h2 className="text-2xl font-black gradient-text">結果発表！</h2>
+        <p className="text-white/50 text-sm mt-1">
+          {asker?.name} さんの {theme.title} {theme.emoji} ランキング
+        </p>
+      </div>
+
+      {/* ランキング全体 */}
+      <div className="space-y-2 mb-5 animate-slide-up">
+        {ranking.map((itemId, idx) => {
+          const item = getThemeItem(theme.id, itemId)
+          if (!item) return null
+          const rank = idx + 1
+          const isMiddle = idx === 3
+          const isTop = rank === 1
+          return (
+            <div
+              key={itemId}
+              className={`
+                flex items-center gap-3 rounded-2xl px-4 py-3
+                ${isTop ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-400/30' :
+                  isMiddle ? 'glass ring-1 ring-pink-400/40' :
+                  'glass'}
+                animate-bounce-in
+              `}
+              style={{ animationDelay: `${idx * 0.06}s` }}
+            >
+              <span className="text-xl font-black w-8 text-center">
+                {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}
+              </span>
+              <span className="text-3xl">{item.emoji}</span>
+              <span className={`font-bold flex-1 text-lg ${isTop ? 'text-yellow-300' : ''}`}>
+                {item.label}
+              </span>
+              {isMiddle && <span className="text-xs text-pink-400 glass px-2 py-1 rounded-lg">公開済み</span>}
+              {isTop && <span className="text-yellow-400">★</span>}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 自分の正誤 */}
+      {my_guess && room.asker_player_id !== playerId && (
+        <div className={`
+          rounded-3xl p-4 text-center mb-4 animate-bounce-in
+          ${myCorrect
+            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30'
+            : 'glass border border-white/10'}
+        `}>
+          {myCorrect ? (
+            <>
+              <p className="text-2xl font-black text-green-400">👑 正解！</p>
+              <p className="text-white/60 text-sm">1位を当てました！</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xl font-bold text-white/60">残念... 不正解</p>
+              <p className="text-white/40 text-sm">
+                あなたの予想: {getThemeItem(theme.id, my_guess)?.emoji}{' '}
+                {getThemeItem(theme.id, my_guess)?.label}
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* 全員の予想 */}
+      {guesses && guesses.length > 0 && (
+        <div className="glass rounded-3xl p-4 mb-4 animate-fade-in">
+          <p className="text-white/40 text-xs mb-3">みんなの予想</p>
+          <div className="space-y-2">
+            {guesses.map(g => {
+              const p = players.find(pl => pl.id === g.player_id)
+              const item = getThemeItem(theme.id, g.guess_top1)
+              const correct = g.guess_top1 === correctAnswer
+              return (
+                <div key={g.player_id} className="flex items-center gap-3">
+                  <span className="text-xl">{correct ? '👑' : '😅'}</span>
+                  <span className="font-semibold flex-1 text-sm">{p?.name}</span>
+                  <span className={`text-sm ${correct ? 'text-yellow-400 font-bold' : 'text-white/50'}`}>
+                    {item?.emoji} {item?.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 最多予想 */}
+      {mostGuessed && (
+        <div className="glass rounded-2xl px-4 py-3 flex items-center gap-3 mb-5">
+          <span className="text-2xl">📊</span>
+          <div>
+            <p className="text-white/40 text-xs">最多予想の1位</p>
+            <p className="font-bold">
+              {getThemeItem(theme.id, mostGuessed[0])?.emoji}{' '}
+              {getThemeItem(theme.id, mostGuessed[0])?.label}
+              <span className="text-white/40 text-xs ml-2">({mostGuessed[1]}票)</span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ボタン */}
+      <div className="space-y-3">
+        <Link
+          href={`/room/${roomCode}/share`}
+          className="btn-secondary w-full text-lg flex items-center justify-center gap-2"
+        >
+          📸 結果カードを見る
+        </Link>
+        {isHost && (
+          <button
+            onClick={() => onAction('next-round')}
+            className="btn-primary w-full text-xl py-4"
+          >
+            ▶️ 次のラウンドへ
+          </button>
+        )}
+        {!isHost && (
+          <div className="glass rounded-2xl py-3 text-center">
+            <p className="text-white/40 text-sm">⏳ ホストが次のラウンドを始めます</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
