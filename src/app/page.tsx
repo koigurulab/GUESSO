@@ -75,12 +75,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-white text-gray-900">
+    <div className="min-h-dvh text-gray-900" style={{ background: '#F7F5FF' }}>
 
       {/* ══════════════════════════════════════════
           HERO — 白基調、スマホ1画面に収める
       ══════════════════════════════════════════ */}
-      <section className="px-5 pt-10 pb-8 text-center bg-gradient-to-b from-purple-50/70 to-white">
+      <section className="px-5 pt-10 pb-8 text-center" style={{ background: 'linear-gradient(to bottom, #ede9fe, #F7F5FF)' }}>
 
         {/* バッジ */}
         <div className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-4 py-1.5 text-sm font-bold text-purple-700 mb-4">
@@ -92,7 +92,7 @@ export default function HomePage() {
           <h1 className="text-6xl font-black tracking-tight leading-none" style={gradientText}>
             GUESSO
           </h1>
-          <p className="text-[11px] tracking-[0.35em] text-gray-400 mt-1">ゲッソ</p>
+          <p className="text-[11px] tracking-[0.35em] text-gray-900 font-bold mt-1">ゲッソ</p>
         </div>
 
         {/* キャッチコピー */}
@@ -135,7 +135,7 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => setMode('join')}
-              className="w-full bg-white border-2 border-purple-200 text-purple-700 font-bold text-base py-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:border-purple-400"
+              className="w-full bg-[#F7F5FF] border-2 border-purple-200 text-purple-700 font-bold text-base py-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:border-purple-400"
             >
               🚪 ルームに参加
             </button>
@@ -226,7 +226,7 @@ export default function HomePage() {
           {/* ══════════════════════════════
               LINE 導線バナー
           ══════════════════════════════ */}
-          <section className="px-5 py-6 bg-white">
+          <section className="px-5 py-6 bg-[#F7F5FF]">
             <div className="max-w-sm mx-auto rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 flex items-center gap-4">
               <div className="text-3xl shrink-0">💬</div>
               <div>
@@ -242,7 +242,7 @@ export default function HomePage() {
           {/* ══════════════════════════════
               ゲームプレビュー
           ══════════════════════════════ */}
-          <section className="px-5 py-10 bg-white">
+          <section className="px-5 py-10 bg-[#F7F5FF]">
             <p className="text-center text-[11px] font-black text-purple-500 uppercase tracking-widest mb-1">PREVIEW</p>
             <h2 className="text-center text-2xl font-black text-gray-900 mb-6">こんな画面で遊ぶ</h2>
             <div className="max-w-sm mx-auto rounded-3xl overflow-hidden border border-purple-100 shadow-md">
@@ -293,7 +293,7 @@ export default function HomePage() {
           {/* ══════════════════════════════
               HOW TO PLAY
           ══════════════════════════════ */}
-          <section className="bg-gray-50 px-5 py-10">
+          <section className="bg-[#EDE9FE] px-5 py-10">
             <p className="text-center text-[11px] font-black text-purple-500 uppercase tracking-widest mb-1">HOW TO PLAY</p>
             <h2 className="text-center text-2xl font-black text-gray-900 mb-8">あそびかた</h2>
             <div className="max-w-sm mx-auto space-y-0">
@@ -351,7 +351,7 @@ export default function HomePage() {
           {/* ══════════════════════════════
               テーマ一覧
           ══════════════════════════════ */}
-          <section className="bg-white px-5 py-10">
+          <section className="bg-[#F7F5FF] px-5 py-10">
             <p className="text-center text-[11px] font-black text-purple-500 uppercase tracking-widest mb-1">THEMES</p>
             <h2 className="text-center text-2xl font-black text-gray-900 mb-6">テーマ</h2>
             <div className="flex gap-3 max-w-sm mx-auto">
@@ -375,7 +375,7 @@ export default function HomePage() {
           {/* ══════════════════════════════
               Bottom CTA
           ══════════════════════════════ */}
-          <section className="bg-gray-50 px-5 py-12 text-center border-t border-gray-100">
+          <section className="bg-[#EDE9FE] px-5 py-12 text-center border-t border-purple-100">
             <p className="text-gray-800 font-bold text-base mb-1">さあ、飲み会をもっと盛り上げよう！</p>
             <p className="text-gray-700 text-xs font-medium mb-6">アプリ不要・無料で今すぐ遊べる</p>
             <button
@@ -388,7 +388,7 @@ export default function HomePage() {
           </section>
 
           {/* ── Footer ── */}
-          <footer className="px-5 pb-8 pt-5 text-center border-t border-gray-200 bg-white">
+          <footer className="px-5 pb-8 pt-5 text-center border-t border-gray-200 bg-[#F7F5FF]">
             <Link href="/privacy" className="text-gray-500 text-xs hover:text-gray-700 transition-colors font-medium">
               プライバシーポリシー
             </Link>
