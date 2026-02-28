@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { checkRateLimit, getRateLimitKey } from '@/lib/rateLimit'
 import type { ActionRequest, RoomState } from '@/lib/types'
 
 function err(msg: string, status = 400) {
@@ -11,6 +12,12 @@ export async function POST(
   { params }: { params: { code: string } }
 ) {
   try {
+    // レート制限: 60秒間に30回まで（ゲーム中は操作が多い）
+    const ip = getRateLimitKey(req)
+    if (!checkRateLimit(ip, 30, 60000)) {
+      return err('リクエストが多すぎます。少し待ってからやり直してください', 429)
+    }
+
     const code = params.code.toUpperCase()
     const body: ActionRequest = await req.json()
     const { action, player_id } = body

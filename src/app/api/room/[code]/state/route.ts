@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { getTheme } from '@/lib/themes'
+import { checkRateLimit, getRateLimitKey } from '@/lib/rateLimit'
 import type { RoomStateResponse } from '@/lib/types'
 
 export async function GET(
@@ -8,6 +9,15 @@ export async function GET(
   { params }: { params: { code: string } }
 ) {
   try {
+    // レート制限: 60秒間に180回まで（ポーリング2秒 = 最大30回/分）
+    const ip = getRateLimitKey(req)
+    if (!checkRateLimit(ip, 180, 60000)) {
+      return NextResponse.json(
+        { error: 'ポーリングが多すぎます' },
+        { status: 429 }
+      )
+    }
+
     const code = params.code.toUpperCase()
     const playerId = req.nextUrl.searchParams.get('player_id')
 
