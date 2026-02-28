@@ -17,8 +17,8 @@ export default function GuessingClosedScreen({ gameState, playerId, onAction }: 
     <div className="min-h-dvh flex flex-col items-center justify-center px-4">
       <div className="text-center animate-bounce-in">
         <div className="text-6xl mb-4">🔔</div>
-        <h2 className="text-2xl font-black text-white mb-2">予想締め切り！</h2>
-        <p className="text-white/50">
+        <h2 className="text-2xl font-black text-gray-900 mb-2">予想締め切り！</h2>
+        <p className="text-gray-600">
           {guess_count}/{guesserCount}人 が予想しました
         </p>
         <div className="mt-6 glass rounded-2xl p-5 text-center">
@@ -27,13 +27,13 @@ export default function GuessingClosedScreen({ gameState, playerId, onAction }: 
               <div
                 key={i}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-lg
-                  ${i < guess_count ? 'bg-green-500/30 text-green-400' : 'bg-white/10 text-white/20'}`}
+                  ${i < guess_count ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}
               >
                 {i < guess_count ? '✓' : '?'}
               </div>
             ))}
           </div>
-          <p className="text-white/40 text-sm">結果を公開しましょう！</p>
+          <p className="text-gray-500 text-sm">結果を公開しましょう！</p>
         </div>
         {isHost ? (
           <button
@@ -44,7 +44,7 @@ export default function GuessingClosedScreen({ gameState, playerId, onAction }: 
           </button>
         ) : (
           <div className="mt-6 glass rounded-2xl py-4 px-6">
-            <p className="text-white/50 text-sm">⏳ ホストが結果を公開します...</p>
+            <p className="text-gray-500 text-sm">⏳ ホストが結果を公開します...</p>
           </div>
         )}
       </div>

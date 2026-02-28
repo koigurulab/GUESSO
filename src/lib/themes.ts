@@ -4,7 +4,7 @@ import type { Theme } from './types'
 export const THEMES: Theme[] = [
   {
     id: 'love',
-    title: '恋愛',
+    title: '異性に求めるもの',
     emoji: '💕',
     category: 'love',
     is_free: true,
@@ -20,7 +20,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'life',
-    title: '人生観',
+    title: '人生で大事なもの',
     emoji: '🌈',
     category: 'life',
     is_free: true,
@@ -36,7 +36,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: 'date',
-    title: 'デート',
+    title: 'デートで大事なもの',
     emoji: '🍸',
     category: 'light',
     is_free: true,

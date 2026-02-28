@@ -16,18 +16,18 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
     <div className="min-h-dvh flex flex-col px-4 py-8">
       <div className="text-center mb-6 animate-fade-in">
         <div className="text-4xl mb-2">{theme?.emoji ?? '🎯'}</div>
-        <p className="text-white/40 text-xs mb-1">ラウンド {room.current_round} · {theme?.title}</p>
-        <h2 className="text-2xl font-black text-white">出題者を指名！</h2>
-        <p className="text-white/40 text-sm mt-1">誰の価値観を当てる？</p>
+        <p className="text-gray-500 text-xs mb-1">ラウンド {room.current_round} · {theme?.title}</p>
+        <h2 className="text-2xl font-black text-gray-900">出題者を指名！</h2>
+        <p className="text-gray-500 text-sm mt-1">誰の価値観を当てる？</p>
       </div>
 
       {/* Theme items preview */}
       {theme && (
         <div className="glass rounded-3xl p-4 mb-5 animate-fade-in">
-          <p className="text-white/40 text-xs mb-2 text-center">このテーマのアイテム</p>
+          <p className="text-gray-500 text-xs mb-2 text-center">このテーマのアイテム</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {theme.items.map(item => (
-              <span key={item.id} className="glass rounded-xl px-3 py-1.5 text-sm">
+              <span key={item.id} className="glass rounded-xl px-3 py-1.5 text-sm text-gray-700">
                 {item.emoji} {item.label}
               </span>
             ))}
@@ -49,12 +49,12 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
             `}
           >
             <span className="text-2xl">{p.is_host ? '👑' : '😊'}</span>
-            <span className="font-bold flex-1 text-left">
+            <span className="font-bold flex-1 text-left text-gray-900">
               {p.name}
-              {p.id === playerId && <span className="text-white/40 text-xs ml-2">（あなた）</span>}
+              {p.id === playerId && <span className="text-gray-400 text-xs ml-2">（あなた）</span>}
             </span>
             {isHost && (
-              <span className="text-gradient-to-r from-pink-400 to-purple-400 text-sm font-bold text-pink-400">
+              <span className="text-pink-500 text-sm font-bold">
                 指名 →
               </span>
             )}
@@ -64,7 +64,7 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
 
       {!isHost && (
         <div className="mt-4 glass rounded-2xl py-4 text-center">
-          <p className="text-white/50 text-sm">⏳ ホストが出題者を選んでいます...</p>
+          <p className="text-gray-500 text-sm">⏳ ホストが出題者を選んでいます...</p>
         </div>
       )}
     </div>

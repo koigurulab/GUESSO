@@ -2,15 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-dark: #0d0b1e;
-  --card-bg: rgba(255, 255, 255, 0.06);
-  --card-border: rgba(255, 255, 255, 0.12);
-}
-
 body {
-  background: var(--bg-dark);
-  color: white;
+  background: #F7F5FF;
+  color: #111827;
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
 }
@@ -23,36 +17,37 @@ body {
 
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.80);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.14);
   }
   .glass-strong {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.08);
   }
   .gradient-text {
-    background: linear-gradient(135deg, #f472b6, #a855f7);
+    background: linear-gradient(135deg, #7c3aed, #ec4899);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .btn-primary {
-    @apply bg-gradient-to-r from-pink-500 to-purple-600
+    @apply bg-gradient-to-r from-violet-600 to-pink-500
            text-white font-bold py-3 px-6 rounded-2xl
            active:scale-95 transition-transform
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-secondary {
-    @apply glass text-white font-semibold py-3 px-6 rounded-2xl
+    @apply bg-white border-2 border-purple-200 text-purple-700 font-semibold py-3 px-6 rounded-2xl
            active:scale-95 transition-transform
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .input-field {
-    @apply glass w-full px-4 py-3 rounded-2xl text-white
-           placeholder-white/30 outline-none
-           focus:border-pink-400/50 focus:ring-2 focus:ring-pink-400/20
+    @apply bg-white border border-gray-300 w-full px-4 py-3 rounded-2xl
+           text-gray-900 placeholder-gray-400 outline-none
+           focus:border-purple-400 focus:ring-2 focus:ring-purple-200
            transition-all text-lg;
   }
 }

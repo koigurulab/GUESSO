@@ -18,7 +18,6 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const asker = players.find(p => p.id === room.asker_player_id)
   const ranking = round?.ranking_json
 
-  // 称号: 今ラウンドのスコアで決定（出題者を除く）
   const nonAskerRoundScores = (round_scores ?? [])
     .filter(s => s.player_id !== room.asker_player_id)
     .sort((a, b) => b.correct - a.correct)
@@ -30,11 +29,9 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const topScorers = allTied ? [] : nonAskerRoundScores.filter(s => s.correct === topRoundScore)
   const bottomScorers = allTied ? [] : nonAskerRoundScores.filter(s => s.correct === bottomRoundScore && s.correct !== topRoundScore)
 
-  // ゲーム通算スコア（表示用・出題者を含む全員）
   const sortedScores = [...(scores ?? [])].sort((a, b) => b.total - a.total)
   const maxTotal = Math.max(...sortedScores.map(s => s.total), 1)
 
-  // Web Share API
   const handleShare = async () => {
     const scoreText = sortedScores
       .map((s, i) => {
@@ -71,7 +68,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   return (
     <div className="min-h-dvh flex flex-col px-4 py-6">
 
-      {/* ===== シェアカード（スクショ用） ===== */}
+      {/* ===== シェアカード（スクショ用・意図的にダーク） ===== */}
       <div
         id="share-card"
         className="rounded-3xl overflow-hidden mb-4 animate-fade-in"
@@ -163,13 +160,13 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
             const p = players.find(pl => pl.id === s.player_id)
             return (
               <div key={s.player_id} className="rounded-2xl px-4 py-3 flex items-center gap-3
-                bg-gradient-to-r from-yellow-500/20 to-amber-500/10 border border-yellow-400/30">
+                bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300">
                 <span className="text-2xl">🏆</span>
                 <div>
-                  <p className="font-black text-yellow-300">{p?.name}</p>
-                  <p className="text-white/60 text-sm">
-                    {asker?.name}の<span className="text-yellow-400 font-bold">一番の理解者</span>！
-                    <span className="text-white/40 ml-1">({s.correct}/{5}点)</span>
+                  <p className="font-black text-yellow-700">{p?.name}</p>
+                  <p className="text-gray-600 text-sm">
+                    {asker?.name}の<span className="text-yellow-600 font-bold">一番の理解者</span>！
+                    <span className="text-gray-400 ml-1">({s.correct}/{5}点)</span>
                   </p>
                 </div>
               </div>
@@ -179,14 +176,14 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
             const p = players.find(pl => pl.id === s.player_id)
             return (
               <div key={s.player_id} className="rounded-2xl px-4 py-3 flex items-center gap-3
-                glass border border-white/10">
+                glass border border-purple-100">
                 <span className="text-2xl">💔</span>
                 <div>
-                  <p className="font-bold text-white/70">{p?.name}</p>
-                  <p className="text-white/50 text-sm">
+                  <p className="font-bold text-gray-800">{p?.name}</p>
+                  <p className="text-gray-600 text-sm">
                     {asker?.name}と
-                    <span className="font-semibold text-white/70">もっと仲良くなろう</span>！
-                    <span className="text-white/30 ml-1">({s.correct}/{5}点)</span>
+                    <span className="font-semibold text-gray-700">もっと仲良くなろう</span>！
+                    <span className="text-gray-400 ml-1">({s.correct}/{5}点)</span>
                   </p>
                 </div>
               </div>
@@ -214,7 +211,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
           </button>
         ) : (
           <div className="glass rounded-2xl py-3 text-center">
-            <p className="text-white/40 text-sm">⏳ ホストが次のラウンドを始めます</p>
+            <p className="text-gray-500 text-sm">⏳ ホストが次のラウンドを始めます</p>
           </div>
         )}
       </div>

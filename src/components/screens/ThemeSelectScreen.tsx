@@ -22,8 +22,8 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
   return (
     <div className="min-h-dvh flex flex-col px-4 py-8">
       <div className="text-center mb-6 animate-fade-in">
-        <p className="text-white/40 text-xs mb-1">ラウンド {room.current_round}</p>
-        <h2 className="text-2xl font-black text-white">テーマを選ぼう！</h2>
+        <p className="text-gray-500 text-xs mb-1">ラウンド {room.current_round}</p>
+        <h2 className="text-2xl font-black text-gray-900">テーマを選ぼう！</h2>
       </div>
 
       <div className="space-y-3 flex-1 animate-slide-up">
@@ -43,16 +43,16 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
                 {theme.emoji}
               </div>
               <div className="flex-1">
-                <p className="font-black text-xl">{theme.title}</p>
+                <p className="font-black text-lg text-gray-900">{theme.title}</p>
                 <div className="flex gap-1.5 mt-1 flex-wrap">
                   {theme.items.map(item => (
-                    <span key={item.id} className="text-xs text-white/40">
+                    <span key={item.id} className="text-xs text-gray-500">
                       {item.emoji}{item.label}
                     </span>
                   ))}
                 </div>
               </div>
-              {isHost && <span className="text-white/30">›</span>}
+              {isHost && <span className="text-gray-400 text-lg">›</span>}
             </div>
           </button>
         ))}
@@ -60,7 +60,7 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
 
       {!isHost && (
         <div className="mt-4 glass rounded-2xl py-4 text-center">
-          <p className="text-white/50 text-sm">⏳ ホストがテーマを選んでいます...</p>
+          <p className="text-gray-500 text-sm">⏳ ホストがテーマを選んでいます...</p>
         </div>
       )}
     </div>

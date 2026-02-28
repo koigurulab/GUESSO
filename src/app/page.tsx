@@ -75,7 +75,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-dvh text-gray-900" style={{ background: '#F7F5FF' }}>
+    <div className="min-h-dvh text-gray-900">
 
       {/* ══════════════════════════════════════════
           HERO — 白基調、スマホ1画面に収める
