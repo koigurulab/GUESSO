@@ -39,6 +39,12 @@ export async function POST(req: NextRequest) {
       .single()
     if (playerErr) throw playerErr
 
+    // rooms.updated_at を更新してホストのETagを無効化（新メンバーが即座に反映される）
+    await supabase
+      .from('rooms')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('code', code)
+
     return NextResponse.json({ player_id: player.id, room_code: code })
   } catch (err) {
     console.error('[join room]', err)

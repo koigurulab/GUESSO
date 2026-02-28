@@ -247,6 +247,9 @@ export async function POST(
         .eq('id', body.kick_player_id)
         .eq('room_code', code)
 
+      // rooms.updated_at を更新して全員のETagを無効化
+      const { error } = await updateRoom({})
+      if (error) throw error
       return NextResponse.json({ ok: true })
     }
 

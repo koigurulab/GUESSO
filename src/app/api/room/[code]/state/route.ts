@@ -13,10 +13,14 @@ export async function GET(
   try {
     const code = params.code.toUpperCase()
     const playerId = req.nextUrl.searchParams.get('player_id')
+    // ETag用: クライアントが前回受け取ったrooms.updated_at
+    const ver = req.nextUrl.searchParams.get('ver')
+    // last_seen更新フラグ: クライアントが30秒間隔で送る
+    const updateSeen = req.nextUrl.searchParams.get('update_seen') === '1'
 
     const supabase = createServerClient()
 
-    // ルーム取得
+    // ── ① ルーム取得（常に1回だけ読む）──────────────────────
     const { data: room, error: roomErr } = await supabase
       .from('rooms')
       .select('*')
@@ -26,21 +30,31 @@ export async function GET(
       return NextResponse.json({ error: 'ルームが見つかりません' }, { status: 404 })
     }
 
-    // プレイヤー一覧取得
-    const { data: players } = await supabase
-      .from('players')
-      .select('id, name, is_host, last_seen')
-      .eq('room_code', code)
-      .order('joined_at', { ascending: true })
-
-    // プレイヤーの last_seen を更新（fire & forget）
-    if (playerId) {
+    // ── ② last_seen 更新（クライアント制御・30秒間隔）────────
+    //    ETagヒット時も含め、update_seen=1 のときだけ書く
+    if (updateSeen && playerId) {
       supabase
         .from('players')
         .update({ last_seen: new Date().toISOString() })
         .eq('id', playerId)
         .then(() => {})
     }
+
+    // ── ③ ETag変更検知 ───────────────────────────────────────
+    //    ver が一致する場合は残りのクエリを全スキップ
+    //    WAITING_PLAYERS は player join が rooms.updated_at を更新するので問題なし
+    if (ver && room.updated_at && ver === room.updated_at) {
+      return NextResponse.json({ changed: false })
+    }
+
+    // ── ④ 以下は状態が変わっていた場合のみ実行 ───────────────
+
+    // プレイヤー一覧取得
+    const { data: players } = await supabase
+      .from('players')
+      .select('id, name, is_host, last_seen')
+      .eq('room_code', code)
+      .order('joined_at', { ascending: true })
 
     // 現在ラウンドの取得
     let roundData = null
@@ -178,6 +192,7 @@ export async function GET(
     }
 
     const response: RoomStateResponse = {
+      updated_at: room.updated_at ?? new Date().toISOString(),
       room: {
         code: room.code,
         state: room.state,

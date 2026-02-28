@@ -15,7 +15,16 @@ import GuessingClosedScreen from '@/components/screens/GuessingClosedScreen'
 import ResultScreen from '@/components/screens/ResultScreen'
 import RoundSummaryScreen from '@/components/screens/RoundSummaryScreen'
 
-const POLL_INTERVAL = 2000
+// ── ポーリング間隔（状態ごとに調整）──────────────────────────
+// 変化が起きやすい状態は短く、待機系は長くしてDB負荷を削減
+const POLL_INTERVALS: Partial<Record<string, number>> = {
+  WAITING_PLAYERS: 5000,   // 参加待ちは5秒（頻繁な変化なし）
+  GUESSING_OPEN:   2000,   // 予想中のみ2秒（guessカウントの反応性が必要）
+}
+const DEFAULT_POLL_MS = 3000  // その他は3秒
+
+// last_seen を更新する間隔（秒）
+const LAST_SEEN_INTERVAL_MS = 30_000
 
 interface Props {
   roomCode: string
@@ -34,8 +43,27 @@ export default function GameRoom({ roomCode }: Props) {
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState('')
 
+  // ── ポーリング制御用 ref ──────────────────────────────────
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  // ETag: 前回レスポンスの rooms.updated_at を保持
+  const updatedAtRef = useRef<string>('')
+  // gameState を ref でも保持（タイムアウトコールバック内で最新値を読むため）
+  const gameStateRef = useRef<RoomStateResponse | null>(null)
+  // last_seen を最後に送った時刻
+  const lastSeenSentAtRef = useRef<number>(0)
+  // フェーズ遷移追跡（GA4用）
   const prevStateRef = useRef<string | null>(null)
+
+  // gameState が変わったら ref も同期
+  useEffect(() => {
+    gameStateRef.current = gameState
+  }, [gameState])
+
+  /** 現在の room.state に応じたポーリング間隔を返す */
+  const getPollMs = (): number => {
+    const state = gameStateRef.current?.room.state ?? ''
+    return POLL_INTERVALS[state] ?? DEFAULT_POLL_MS
+  }
 
   // Load player from localStorage
   useEffect(() => {
@@ -58,43 +86,83 @@ export default function GameRoom({ roomCode }: Props) {
   const fetchState = useCallback(async (pid?: string) => {
     const id = pid ?? playerId
     if (!id) return
+
+    // last_seen 更新フラグ（クライアント側で30秒間隔に制限）
+    const now = Date.now()
+    let updateSeen = false
+    if (now - lastSeenSentAtRef.current >= LAST_SEEN_INTERVAL_MS) {
+      updateSeen = true
+      lastSeenSentAtRef.current = now
+    }
+
     try {
-      const res = await fetch(`/api/room/${roomCode}/state?player_id=${id}`)
+      const params = new URLSearchParams({ player_id: id })
+      // ETagを送信: ver が一致すれば API は {changed: false} を返す
+      if (updatedAtRef.current) params.set('ver', updatedAtRef.current)
+      if (updateSeen) params.set('update_seen', '1')
+
+      const res = await fetch(`/api/room/${roomCode}/state?${params}`)
       if (res.status === 404) {
         setError('ルームが見つかりません')
         setLoading(false)
         return
       }
       if (!res.ok) throw new Error('fetch failed')
-      const data: RoomStateResponse = await res.json()
-      setGameState(data)
-      setLoading(false)
 
-      // ゲーム状態が変わったタイミングでイベント送信
-      const newState = data.room.state
-      if (prevStateRef.current !== newState) {
+      const data = await res.json()
+
+      // ETagヒット: 状態変化なし → stateを更新せず早期リターン
+      if ('changed' in data && data.changed === false) {
+        setLoading(false)
+        return
+      }
+
+      // ゲーム状態が変わったタイミングでGA4イベント送信
+      const newRoomState = data.room?.state
+      if (newRoomState && prevStateRef.current !== newRoomState) {
         trackEvent('game_phase_changed', {
           from_phase: prevStateRef.current ?? 'none',
-          to_phase: newState,
+          to_phase: newRoomState,
           room_code: roomCode,
           round: data.room.current_round ?? 1,
         })
-        prevStateRef.current = newState
+        prevStateRef.current = newRoomState
       }
+
+      // ETag更新
+      if (data.updated_at) updatedAtRef.current = data.updated_at
+
+      setGameState(data)
+      setLoading(false)
     } catch (e) {
       console.error('[fetchState]', e)
       // ネットワークエラーは静かに無視（ポーリングで再試行）
     }
   }, [roomCode, playerId])
 
-  // Start polling when player_id is set
+  // ── アダプティブポーリング（setTimeout チェーン）──────────
+  // setInterval と違い、前のリクエストが完了してから次を予約できる。
+  // また gameState に応じて間隔を動的に変えられる。
   useEffect(() => {
     if (!playerId) return
-    fetchState(playerId)
-    pollingRef.current = setInterval(() => fetchState(), POLL_INTERVAL)
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current)
+
+    let cancelled = false
+
+    const poll = async (isFirst = false) => {
+      if (cancelled) return
+      await fetchState(isFirst ? playerId : undefined)
+      if (!cancelled) {
+        pollingRef.current = setTimeout(() => poll(), getPollMs())
+      }
     }
+
+    poll(true)
+
+    return () => {
+      cancelled = true
+      if (pollingRef.current) clearTimeout(pollingRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerId, fetchState])
 
   // Action handler (returns true on success, false on failure)
@@ -117,7 +185,8 @@ export default function GameRoom({ roomCode }: Props) {
         room_code: roomCode,
         ...(typeof params.theme_id === 'string' ? { theme_id: params.theme_id } : {}),
       })
-      // すぐにポーリング
+      // アクション後はETagをリセットして強制フェッチ
+      updatedAtRef.current = ''
       await fetchState()
       return true
     } catch {

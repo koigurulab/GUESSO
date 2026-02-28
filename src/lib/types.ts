@@ -73,6 +73,8 @@ export interface Guess {
 // API Response Types
 // ============================================================
 export interface RoomStateResponse {
+  /** rooms.updated_at — クライアントがETagとして使用する */
+  updated_at: string
   room: {
     code: string
     state: RoomState
