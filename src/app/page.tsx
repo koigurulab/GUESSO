@@ -83,7 +83,7 @@ export default function HomePage() {
       <section className="px-5 pt-10 pb-8 text-center bg-gradient-to-b from-purple-50/70 to-white">
 
         {/* バッジ */}
-        <div className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-[11px] font-bold text-purple-700 mb-4">
+        <div className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-4 py-1.5 text-sm font-bold text-purple-700 mb-4">
           🍻 飲み会向け・価値観推理ゲーム
         </div>
 
@@ -99,7 +99,7 @@ export default function HomePage() {
         <h2 className="text-[1.6rem] font-black text-gray-900 leading-snug mb-1">
           一人の<span className="text-purple-600">価値観</span>を、<br />みんなで当て合おう
         </h2>
-        <p className="text-[13px] font-semibold text-gray-600 mb-5">
+        <p className="text-[13px] font-semibold text-gray-900 mb-5">
           あなたを1番理解してる友達は誰だ！？🔥
         </p>
 
@@ -153,7 +153,7 @@ export default function HomePage() {
             </button>
             <div className="bg-white border border-gray-200 shadow-sm rounded-3xl p-6">
               <h2 className="text-xl font-black mb-1 text-gray-900">ルームを作成</h2>
-              <p className="text-gray-600 text-sm font-medium mb-5">あなたがホストになります</p>
+              <p className="text-gray-800 text-sm font-medium mb-5">あなたがホストになります</p>
               <form onSubmit={handleCreate} className="space-y-4">
                 <input
                   className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 font-medium focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
@@ -188,7 +188,7 @@ export default function HomePage() {
             </button>
             <div className="bg-white border border-gray-200 shadow-sm rounded-3xl p-6">
               <h2 className="text-xl font-black mb-1 text-gray-900">ルームに参加</h2>
-              <p className="text-gray-600 text-sm font-medium mb-5">ホストからコードを教えてもらおう</p>
+              <p className="text-gray-800 text-sm font-medium mb-5">ホストからコードを教えてもらおう</p>
               <form onSubmit={handleJoin} className="space-y-4">
                 <input
                   className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-2xl tracking-widest uppercase text-gray-900 placeholder-gray-400 font-bold focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
@@ -231,7 +231,7 @@ export default function HomePage() {
               <div className="text-3xl shrink-0">💬</div>
               <div>
                 <p className="font-black text-sm text-gray-900 leading-tight">LINEグループにURLを投げるだけ</p>
-                <p className="text-xs text-gray-600 font-medium mt-0.5 leading-snug">
+                <p className="text-xs text-gray-800 font-medium mt-0.5 leading-snug">
                   ルームを作ったらリンクをシェア。<br />
                   受け取った友達はタップするだけで参加できる。
                 </p>
@@ -268,7 +268,7 @@ export default function HomePage() {
                       'bg-gray-50 border border-gray-200 opacity-55'
                     }`}
                   >
-                    <span className="w-7 text-right text-xs font-bold text-gray-500">{rank}位</span>
+                    <span className="w-7 text-right text-xs font-bold text-gray-700">{rank}位</span>
                     <span className="text-base">{state === 'hidden' ? '❓' : emoji}</span>
                     <span className={`font-semibold ${
                       state === 'hidden'  ? 'text-gray-400' :
@@ -341,7 +341,7 @@ export default function HomePage() {
                       <span className="text-xl">{emoji}</span>
                       <span className="font-black text-gray-900">{title}</span>
                     </div>
-                    <p className="text-sm text-gray-600 font-medium leading-relaxed">{desc}</p>
+                    <p className="text-sm text-gray-800 font-medium leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -366,7 +366,7 @@ export default function HomePage() {
                 >
                   <div className="text-3xl mb-2">{emoji}</div>
                   <div className="font-black text-gray-900 text-sm mb-1">{label}</div>
-                  <div className="text-[11px] text-gray-600 font-medium leading-tight">{items}</div>
+                  <div className="text-[11px] text-gray-800 font-medium leading-tight">{items}</div>
                 </div>
               ))}
             </div>
@@ -377,7 +377,7 @@ export default function HomePage() {
           ══════════════════════════════ */}
           <section className="bg-gray-50 px-5 py-12 text-center border-t border-gray-100">
             <p className="text-gray-800 font-bold text-base mb-1">さあ、飲み会をもっと盛り上げよう！</p>
-            <p className="text-gray-500 text-xs font-medium mb-6">アプリ不要・無料で今すぐ遊べる</p>
+            <p className="text-gray-700 text-xs font-medium mb-6">アプリ不要・無料で今すぐ遊べる</p>
             <button
               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMode('create') }}
               className="text-white font-black text-lg py-4 px-10 rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-200"
