@@ -26,7 +26,6 @@ export default function HomePage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); return }
-      // ホストのplayer_idをlocalStorageに保存
       localStorage.setItem(
         `guesso_${data.room_code}`,
         JSON.stringify({ playerId: data.player_id, playerName: hostName.trim() })
@@ -66,108 +65,254 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
-      {/* Logo */}
-      <div className="mb-10 text-center animate-fade-in">
-        <div className="text-6xl mb-3">🎯</div>
-        <h1 className="text-5xl font-black gradient-text tracking-tight">GUESSO</h1>
-        <p className="text-white/50 mt-2 text-sm">価値観推理ゲーム</p>
-      </div>
+    <div className="min-h-dvh bg-white text-gray-900">
 
-      {/* Home mode */}
+      {/* ── Hero ── */}
+      <section className="bg-gradient-to-b from-purple-50 via-pink-50/40 to-white px-5 pt-14 pb-10 text-center">
+        <div className="text-5xl mb-3 animate-bounce-slow">🎯</div>
+        <h1 className="text-5xl font-black tracking-tight mb-2"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          GUESSO
+        </h1>
+        <p className="text-xl font-bold text-gray-800 leading-snug mb-1">
+          一人の<span className="text-purple-600">価値観</span>を、<br />みんなで当て合おう🍻
+        </p>
+        <p className="text-sm text-gray-400 mb-8">飲み会向け・価値観推理ゲーム</p>
+
+        {/* ── CTA Buttons ── */}
+        {mode === 'home' && (
+          <div className="space-y-3 max-w-xs mx-auto">
+            <button
+              onClick={() => setMode('create')}
+              className="w-full text-white font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-purple-200"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
+            >
+              🏠 ルームを作る
+            </button>
+            <button
+              onClick={() => setMode('join')}
+              className="w-full bg-white border-2 border-purple-200 hover:border-purple-400 text-purple-700 font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              🚪 ルームに参加
+            </button>
+          </div>
+        )}
+
+        {/* ── Create form ── */}
+        {mode === 'create' && (
+          <div className="max-w-xs mx-auto text-left">
+            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-400 text-sm mb-4 flex items-center gap-1">
+              ← もどる
+            </button>
+            <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
+              <h2 className="text-xl font-bold mb-1 text-gray-900">ルームを作成</h2>
+              <p className="text-gray-400 text-sm mb-5">あなたがホストになります</p>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  placeholder="あなたの名前（12文字以内）"
+                  value={hostName}
+                  onChange={e => setHostName(e.target.value)}
+                  maxLength={12}
+                  autoFocus
+                />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading || !hostName.trim()}
+                  className="w-full text-white font-bold py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
+                >
+                  {loading ? '作成中...' : '🎉 作成する'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Join form ── */}
+        {mode === 'join' && (
+          <div className="max-w-xs mx-auto text-left">
+            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-400 text-sm mb-4 flex items-center gap-1">
+              ← もどる
+            </button>
+            <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
+              <h2 className="text-xl font-bold mb-1 text-gray-900">ルームに参加</h2>
+              <p className="text-gray-400 text-sm mb-5">ホストからコードを教えてもらおう</p>
+              <form onSubmit={handleJoin} className="space-y-4">
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl tracking-widest uppercase placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  placeholder="XXXXXX"
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  autoFocus
+                />
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  placeholder="あなたの名前（12文字以内）"
+                  value={joinName}
+                  onChange={e => setJoinName(e.target.value)}
+                  maxLength={12}
+                />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading || !joinCode.trim() || !joinName.trim()}
+                  className="w-full text-white font-bold py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
+                >
+                  {loading ? '参加中...' : '🚀 参加する'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Below-fold content (home only) ── */}
       {mode === 'home' && (
-        <div className="w-full max-w-sm space-y-3 animate-slide-up">
-          <button
-            onClick={() => setMode('create')}
-            className="btn-primary w-full text-xl py-4 flex items-center justify-center gap-2"
-          >
-            <span>🏠</span> ルームを作る
-          </button>
-          <button
-            onClick={() => setMode('join')}
-            className="btn-secondary w-full text-xl py-4 flex items-center justify-center gap-2"
-          >
-            <span>🚪</span> ルームに参加
-          </button>
-          <p className="text-center text-white/30 text-xs mt-4">
-            友達の飲み会で盛り上がろう🍻
-          </p>
-          <p className="text-center mt-2">
-            <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40">
+        <>
+          {/* ── Game preview ── */}
+          <section className="px-5 py-10">
+            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-4">こんなゲームです</p>
+            <div className="max-w-sm mx-auto rounded-3xl overflow-hidden border border-purple-100 shadow-sm">
+              {/* Card header */}
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 flex items-center gap-2">
+                <span className="text-xl">💕</span>
+                <span className="font-bold text-white text-sm">恋愛テーマ — 2位を予想中！</span>
+              </div>
+              {/* Ranking rows */}
+              <div className="bg-white px-4 py-3 space-y-2">
+                {[
+                  { rank: 1, emoji: '👀', label: '顔', state: 'correct' },
+                  { rank: 2, emoji: '?', label: '予想してみよう…', state: 'active' },
+                  { rank: 3, emoji: '?', label: '—', state: 'hidden' },
+                  { rank: 4, emoji: '💝', label: '性格', state: 'hint' },
+                  { rank: 5, emoji: '?', label: '—', state: 'hidden' },
+                  { rank: 6, emoji: '?', label: '—', state: 'hidden' },
+                ].map(({ rank, emoji, label, state }) => (
+                  <div
+                    key={rank}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                      state === 'correct' ? 'bg-green-50 border border-green-100' :
+                      state === 'active'  ? 'bg-purple-50 border border-purple-200 ring-1 ring-purple-300' :
+                      state === 'hint'    ? 'bg-yellow-50 border border-yellow-200' :
+                      'bg-gray-50 border border-gray-100 opacity-50'
+                    }`}
+                  >
+                    <span className="w-7 text-right text-xs font-bold text-gray-400">{rank}位</span>
+                    <span className="text-base">{state === 'hidden' ? '❓' : emoji}</span>
+                    <span className={`font-semibold ${state === 'hidden' ? 'text-gray-300' : state === 'active' ? 'text-purple-600' : 'text-gray-700'}`}>
+                      {label}
+                    </span>
+                    {state === 'correct' && <span className="ml-auto text-green-500 text-xs font-bold">✓ 正解</span>}
+                    {state === 'hint'    && <span className="ml-auto text-yellow-500 text-xs font-bold">💡 ヒント</span>}
+                    {state === 'active'  && <span className="ml-auto text-purple-400 text-xs font-bold">← 予想中</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="bg-purple-50 px-4 py-3 text-center">
+                <p className="text-xs text-purple-500 font-semibold">4位だけヒントとして公開される！他は順番に当てていこう</p>
+              </div>
+            </div>
+          </section>
+
+          {/* ── How to play ── */}
+          <section className="bg-gray-50 px-5 py-10">
+            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">HOW TO PLAY</p>
+            <h2 className="text-center text-2xl font-black text-gray-900 mb-8">あそびかた</h2>
+            <div className="max-w-sm mx-auto space-y-0">
+              {[
+                {
+                  step: 1, emoji: '📱',
+                  title: 'ルームを作って仲間を招待',
+                  desc: 'ホストがルームコードを共有。飲み会中にスマホで参加するだけ',
+                },
+                {
+                  step: 2, emoji: '🎯',
+                  title: 'テーマと出題者を決める',
+                  desc: '「恋愛」「人生観」などのテーマを選んで、今回の出題者を指名',
+                },
+                {
+                  step: 3, emoji: '📝',
+                  title: '出題者が7項目をランキング',
+                  desc: '自分の正直な順位を入力。4位だけ全員に公開されるヒントになる',
+                },
+                {
+                  step: 4, emoji: '🤔',
+                  title: 'みんなで1〜6位を順番に予想',
+                  desc: 'ヒントを参考に全員が予想。合ってたらポイントゲット！',
+                },
+                {
+                  step: 5, emoji: '🎊',
+                  title: 'スコア発表 → 次の出題者へ',
+                  desc: '全部当てたら神読み！出題者を交代してまた盛り上がろう',
+                },
+              ].map(({ step, emoji, title, desc }, i, arr) => (
+                <div key={step} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}
+                    >
+                      {step}
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div className="w-0.5 flex-1 bg-purple-100 my-1 min-h-[20px]" />
+                    )}
+                  </div>
+                  <div className="pb-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xl">{emoji}</span>
+                      <span className="font-bold text-gray-900">{title}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Themes ── */}
+          <section className="px-5 py-10">
+            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">THEMES</p>
+            <h2 className="text-center text-2xl font-black text-gray-900 mb-6">テーマ</h2>
+            <div className="flex gap-3 max-w-sm mx-auto">
+              {[
+                { emoji: '💕', label: '恋愛', items: '顔・性格・収入…' },
+                { emoji: '🌈', label: '人生観', items: '自由・お金・健康…' },
+                { emoji: '🍸', label: 'デート', items: '雰囲気・映え・リード…' },
+              ].map(({ emoji, label, items }) => (
+                <div key={label} className="flex-1 bg-purple-50 border border-purple-100 rounded-2xl px-2 py-4 text-center">
+                  <div className="text-3xl mb-2">{emoji}</div>
+                  <div className="font-bold text-purple-700 text-sm mb-1">{label}</div>
+                  <div className="text-xs text-gray-400 leading-tight">{items}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Bottom CTA ── */}
+          <section className="px-5 pb-14 text-center">
+            <p className="text-gray-400 text-sm mb-5">さあ、飲み会をもっと盛り上げよう！</p>
+            <button
+              onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMode('create') }}
+              className="text-white font-bold text-lg py-4 px-10 rounded-2xl shadow-lg shadow-purple-200 transition-all active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}
+            >
+              🍻 今すぐはじめる
+            </button>
+          </section>
+
+          {/* ── Footer ── */}
+          <footer className="px-5 pb-8 pt-6 text-center border-t border-gray-100">
+            <Link href="/privacy" className="text-gray-300 text-xs hover:text-gray-500 transition-colors">
               プライバシーポリシー
             </Link>
-          </p>
-        </div>
+          </footer>
+        </>
       )}
-
-      {/* Create mode */}
-      {mode === 'create' && (
-        <div className="w-full max-w-sm animate-slide-up">
-          <button onClick={() => { setMode('home'); setError('') }} className="text-white/40 text-sm mb-4 flex items-center gap-1">
-            ← もどる
-          </button>
-          <div className="glass rounded-3xl p-6">
-            <h2 className="text-xl font-bold mb-1">ルームを作成</h2>
-            <p className="text-white/40 text-sm mb-5">あなたがホストになります</p>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <input
-                className="input-field"
-                placeholder="あなたの名前"
-                value={hostName}
-                onChange={e => setHostName(e.target.value)}
-                maxLength={12}
-                autoFocus
-              />
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading || !hostName.trim()}
-                className="btn-primary w-full text-lg"
-              >
-                {loading ? '作成中...' : '🎉 作成する'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Join mode */}
-      {mode === 'join' && (
-        <div className="w-full max-w-sm animate-slide-up">
-          <button onClick={() => { setMode('home'); setError('') }} className="text-white/40 text-sm mb-4 flex items-center gap-1">
-            ← もどる
-          </button>
-          <div className="glass rounded-3xl p-6">
-            <h2 className="text-xl font-bold mb-1">ルームに参加</h2>
-            <p className="text-white/40 text-sm mb-5">ホストからコードを教えてもらおう</p>
-            <form onSubmit={handleJoin} className="space-y-4">
-              <input
-                className="input-field tracking-widest text-center text-2xl uppercase"
-                placeholder="XXXXXX"
-                value={joinCode}
-                onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                maxLength={6}
-                autoFocus
-              />
-              <input
-                className="input-field"
-                placeholder="あなたの名前"
-                value={joinName}
-                onChange={e => setJoinName(e.target.value)}
-                maxLength={12}
-              />
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading || !joinCode.trim() || !joinName.trim()}
-                className="btn-primary w-full text-lg"
-              >
-                {loading ? '参加中...' : '🚀 参加する'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </main>
+    </div>
   )
 }
