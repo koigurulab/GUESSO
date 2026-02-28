@@ -89,6 +89,7 @@ export default function ShareCardPage() {
         {/* Ranking */}
         <div className="px-4 py-3 space-y-1.5">
           {ranking.map((itemId, idx) => {
+            if (!itemId) return null
             const item = getThemeItem(theme.id, itemId)
             if (!item) return null
             const rank = idx + 1

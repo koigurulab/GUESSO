@@ -24,18 +24,19 @@ CREATE TABLE themes (
 -- host_player_id / asker_player_id は循環FK回避のため FK 制約なし
 -- ======================
 CREATE TABLE rooms (
-  code             TEXT PRIMARY KEY,
-  host_player_id   UUID,               -- FK なし（循環参照回避）
-  state            TEXT NOT NULL DEFAULT 'WAITING_PLAYERS'
-                   CHECK (state IN (
-                     'WAITING_PLAYERS','SELECT_THEME','SELECT_ASKER',
-                     'ASKER_RANKING','REVEAL_MIDDLE','GUESSING_OPEN',
-                     'GUESSING_CLOSED','RESULT_REVEALED'
-                   )),
-  current_round    INTEGER DEFAULT 0,
-  asker_player_id  UUID,               -- FK なし
-  created_at       TIMESTAMPTZ DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ DEFAULT NOW()
+  code                TEXT PRIMARY KEY,
+  host_player_id      UUID,               -- FK なし（循環参照回避）
+  state               TEXT NOT NULL DEFAULT 'WAITING_PLAYERS'
+                      CHECK (state IN (
+                        'WAITING_PLAYERS','SELECT_THEME','SELECT_ASKER',
+                        'ASKER_RANKING','REVEAL_MIDDLE','GUESSING_OPEN',
+                        'GUESSING_CLOSED','RESULT_REVEALED','ROUND_SUMMARY'
+                      )),
+  current_round       INTEGER DEFAULT 0,
+  asker_player_id     UUID,               -- FK なし
+  current_guess_rank  INTEGER,            -- 現在予想中の順位 (1,2,3,5,6)
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ======================
@@ -78,9 +79,10 @@ CREATE TABLE guesses (
   room_code    TEXT NOT NULL,
   round_no     INTEGER NOT NULL,
   player_id    UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  guess_top1   TEXT NOT NULL,   -- item_id
+  guess_rank   INTEGER NOT NULL DEFAULT 1,  -- 予想対象の順位 (1,2,3,5,6)
+  guess_top1   TEXT NOT NULL,               -- 予想したitem_id
   submitted_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(room_code, round_no, player_id)
+  UNIQUE(room_code, round_no, player_id, guess_rank)
 );
 
 -- ======================

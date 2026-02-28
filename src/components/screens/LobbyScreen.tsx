@@ -7,7 +7,7 @@ interface Props {
   gameState: RoomStateResponse
   playerId: string
   roomCode: string
-  onAction: (action: string, params?: Record<string, unknown>) => Promise<void>
+  onAction: (action: string, params?: Record<string, unknown>) => Promise<boolean>
 }
 
 export default function LobbyScreen({ gameState, playerId, roomCode, onAction }: Props) {

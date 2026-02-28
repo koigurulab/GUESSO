@@ -6,7 +6,7 @@ import type { RoomStateResponse } from '@/lib/types'
 interface Props {
   gameState: RoomStateResponse
   playerId: string
-  onAction: (action: string, params?: Record<string, unknown>) => Promise<void>
+  onAction: (action: string, params?: Record<string, unknown>) => Promise<boolean>
 }
 
 export default function RevealMiddleScreen({ gameState, playerId, onAction }: Props) {
@@ -41,14 +41,12 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
         </div>
       )}
 
-      {/* 残りのアイテム（シャッフル表示） */}
+      {/* 残りのアイテム */}
       {theme && (
         <div className="glass rounded-3xl p-4 mb-6 w-full max-w-sm animate-fade-in">
-          <p className="text-white/40 text-xs mb-2 text-center">残りのアイテム（順番はシャッフル）</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {theme.items
               .filter(i => i.id !== round?.middle_revealed_value)
-              .sort(() => Math.random() - 0.5)
               .map(item => (
                 <span key={item.id} className="glass rounded-xl px-3 py-2 text-sm">
                   {item.emoji} {item.label}

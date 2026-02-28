@@ -8,6 +8,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export function createServerClient() {
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false },
+    global: {
+      // Next.js 14のfetchキャッシュを無効化し、常に最新データを取得する
+      fetch: (url: RequestInfo | URL, options?: RequestInit) =>
+        fetch(url, { ...options, cache: 'no-store' }),
+    },
   })
 }
 

@@ -6,7 +6,7 @@ import type { RoomStateResponse } from '@/lib/types'
 interface Props {
   gameState: RoomStateResponse
   playerId: string
-  onAction: (action: string, params?: Record<string, unknown>) => Promise<void>
+  onAction: (action: string, params?: Record<string, unknown>) => Promise<boolean>
 }
 
 const categoryColor: Record<string, string> = {

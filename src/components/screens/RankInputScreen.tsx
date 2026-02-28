@@ -24,7 +24,7 @@ import type { RoomStateResponse, ThemeItem } from '@/lib/types'
 interface Props {
   gameState: RoomStateResponse
   playerId: string
-  onAction: (action: string, params?: Record<string, unknown>) => Promise<void>
+  onAction: (action: string, params?: Record<string, unknown>) => Promise<boolean>
 }
 
 function SortableItem({
@@ -109,8 +109,8 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
   const handleSubmit = async () => {
     if (submitting) return
     setSubmitting(true)
-    await onAction('submit-ranking', { ranking: items.map(i => i.id) })
-    setConfirmed(true)
+    const ok = await onAction('submit-ranking', { ranking: items.map(i => i.id) })
+    if (ok) setConfirmed(true)
     setSubmitting(false)
   }
 

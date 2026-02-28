@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { checkRateLimit, getRateLimitKey } from '@/lib/rateLimit'
 import type { ActionRequest, RoomState } from '@/lib/types'
 
 function err(msg: string, status = 400) {
@@ -12,12 +11,6 @@ export async function POST(
   { params }: { params: { code: string } }
 ) {
   try {
-    // レート制限: 60秒間に30回まで（ゲーム中は操作が多い）
-    const ip = getRateLimitKey(req)
-    if (!checkRateLimit(ip, 30, 60000)) {
-      return err('リクエストが多すぎます。少し待ってからやり直してください', 429)
-    }
-
     const code = params.code.toUpperCase()
     const body: ActionRequest = await req.json()
     const { action, player_id } = body
@@ -91,11 +84,12 @@ export async function POST(
         .single()
       if (!asker) return err('指定した出題者はこのルームのプレイヤーではありません')
 
-      await supabase
+      const { error: roundErr } = await supabase
         .from('rounds')
         .update({ asker_player_id: body.asker_player_id })
         .eq('room_code', code)
         .eq('round_no', room.current_round)
+      if (roundErr) throw roundErr
 
       const { error } = await updateRoom({
         state: 'ASKER_RANKING',
@@ -115,11 +109,12 @@ export async function POST(
 
       const middle = body.ranking[3]  // 4位（index 3）
 
-      await supabase
+      const { error: rankErr } = await supabase
         .from('rounds')
         .update({ ranking_json: body.ranking, middle_revealed_value: middle })
         .eq('room_code', code)
         .eq('round_no', room.current_round)
+      if (rankErr) throw rankErr
 
       const { error } = await updateRoom({ state: 'REVEAL_MIDDLE' })
       if (error) throw error
@@ -133,7 +128,7 @@ export async function POST(
       if (!isHost) return err('ホストのみ操作できます', 403)
       if (state !== 'REVEAL_MIDDLE') return err(`現在 ${state} 状態のため予想オープンできません`)
 
-      const { error } = await updateRoom({ state: 'GUESSING_OPEN' })
+      const { error } = await updateRoom({ state: 'GUESSING_OPEN', current_guess_rank: 1 })
       if (error) throw error
       return NextResponse.json({ ok: true })
     }
@@ -145,6 +140,7 @@ export async function POST(
       if (state !== 'GUESSING_OPEN') return err(`現在 ${state} 状態のため予想できません`)
       if (player_id === room.asker_player_id) return err('出題者は予想できません', 403)
       if (!body.guess_top1) return err('guess_top1が必要です')
+      if (!room.current_guess_rank) return err('current_guess_rankが設定されていません')
 
       // UPSERT（再送信も上書き可）
       const { error } = await supabase
@@ -154,10 +150,11 @@ export async function POST(
             room_code: code,
             round_no: room.current_round,
             player_id,
+            guess_rank: room.current_guess_rank,
             guess_top1: body.guess_top1,
             submitted_at: now,
           },
-          { onConflict: 'room_code,round_no,player_id' }
+          { onConflict: 'room_code,round_no,player_id,guess_rank' }
         )
       if (error) throw error
       return NextResponse.json({ ok: true })
@@ -188,16 +185,49 @@ export async function POST(
     }
 
     // ========================
+    // show-summary（ラウンドサマリーへ移行）
+    // ========================
+    if (action === 'show-summary') {
+      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (state !== 'RESULT_REVEALED') return err(`現在 ${state} 状態のためサマリーに進めません`)
+      if (room.current_guess_rank !== 6) return err('まだ全ての順位を予想し終えていません')
+
+      const { error } = await updateRoom({ state: 'ROUND_SUMMARY' })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // ========================
+    // next-rank（同テーマで次の順位を予想）
+    // ========================
+    if (action === 'next-rank') {
+      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (state !== 'RESULT_REVEALED') return err(`現在 ${state} 状態のため次の順位に進めません`)
+
+      const RANK_SEQUENCE = [1, 2, 3, 5, 6]
+      const currentIdx = RANK_SEQUENCE.indexOf(room.current_guess_rank ?? -1)
+      if (currentIdx === -1 || currentIdx >= RANK_SEQUENCE.length - 1) {
+        return err('全ての順位を予想し終えています。next-roundを使ってください')
+      }
+      const nextRank = RANK_SEQUENCE[currentIdx + 1]
+
+      const { error } = await updateRoom({ state: 'GUESSING_OPEN', current_guess_rank: nextRank })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // ========================
     // next-round
     // ========================
     if (action === 'next-round') {
       if (!isHost) return err('ホストのみ操作できます', 403)
-      if (state !== 'RESULT_REVEALED') return err(`現在 ${state} 状態のため次ラウンドに進めません`)
+      if (state !== 'ROUND_SUMMARY') return err(`現在 ${state} 状態のため次ラウンドに進めません`)
 
       const { error } = await updateRoom({
         state: 'SELECT_THEME',
         current_round: room.current_round + 1,
         asker_player_id: null,
+        current_guess_rank: null,
       })
       if (error) throw error
       return NextResponse.json({ ok: true })

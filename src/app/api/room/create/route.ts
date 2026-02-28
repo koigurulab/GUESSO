@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, generateRoomCode } from '@/lib/supabase'
-import { checkRateLimit, getRateLimitKey } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
-    // レート制限: 60秒間に5回まで
-    const ip = getRateLimitKey(req)
-    if (!checkRateLimit(ip, 5, 60000)) {
-      return NextResponse.json(
-        { error: 'リクエストが多すぎます。少し待ってからやり直してください' },
-        { status: 429 }
-      )
-    }
-
     const { host_name } = await req.json()
     if (!host_name?.trim()) {
       return NextResponse.json({ error: '名前を入力してください' }, { status: 400 })

@@ -26,6 +26,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1289153724020381"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="min-h-dvh bg-gradient-to-br from-gray-950 via-purple-950/50 to-gray-950">
           {children}

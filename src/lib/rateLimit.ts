@@ -60,7 +60,7 @@ export function startRateLimitCleanup(intervalMs: number = 600000) {
   if (typeof setInterval !== 'undefined') {
     setInterval(() => {
       const now = Date.now()
-      for (const [key, entry] of rateLimitMap.entries()) {
+      for (const [key, entry] of Array.from(rateLimitMap.entries())) {
         entry.timestamps = entry.timestamps.filter(t => now - t < 600000)
         if (entry.timestamps.length === 0) {
           rateLimitMap.delete(key)

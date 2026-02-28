@@ -7,9 +7,10 @@ export type RoomState =
   | 'SELECT_ASKER'      // ホストが出題者指名
   | 'ASKER_RANKING'     // 出題者がランキング入力
   | 'REVEAL_MIDDLE'     // 4位が公開された状態（ホスト待ち）
-  | 'GUESSING_OPEN'     // 全員が1位予想中
+  | 'GUESSING_OPEN'     // 全員が予想中
   | 'GUESSING_CLOSED'   // 締切（ホストが結果公開待ち）
-  | 'RESULT_REVEALED'   // 全結果公開
+  | 'RESULT_REVEALED'   // 順位ごとの結果公開
+  | 'ROUND_SUMMARY'     // ラウンド終了サマリー（スコアボード）
 
 // ============================================================
 // DB Models
@@ -77,6 +78,7 @@ export interface RoomStateResponse {
     state: RoomState
     current_round: number
     asker_player_id: string | null
+    current_guess_rank: number | null  // 現在予想中の順位 (1,2,3,5,6)
   }
   players: Pick<Player, 'id' | 'name' | 'is_host' | 'last_seen'>[]
   theme: Theme | null
@@ -84,13 +86,16 @@ export interface RoomStateResponse {
     round_no: number
     theme_id: string | null
     asker_player_id: string | null
-    ranking_json: string[] | null  // null until RESULT_REVEALED
+    ranking_json: (string | null)[] | null  // null=非公開, string=公開済みitem_id
     middle_revealed_value: string | null
   } | null
   guess_count: number
   my_guess: string | null
   // only populated in RESULT_REVEALED
   guesses: Array<{ player_id: string; guess_top1: string }> | null
+  // only populated in ROUND_SUMMARY
+  scores: Array<{ player_id: string; total: number }> | null        // ゲーム通算スコア
+  round_scores: Array<{ player_id: string; correct: number }> | null // 今ラウンドのスコア（称号用）
 }
 
 // ============================================================
@@ -105,6 +110,8 @@ export type GameAction =
   | 'submit-guess'
   | 'close-guess'
   | 'reveal-result'
+  | 'next-rank'
+  | 'show-summary'
   | 'next-round'
   | 'kick-player'
 

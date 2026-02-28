@@ -12,6 +12,7 @@ import RevealMiddleScreen from '@/components/screens/RevealMiddleScreen'
 import GuessingScreen from '@/components/screens/GuessingScreen'
 import GuessingClosedScreen from '@/components/screens/GuessingClosedScreen'
 import ResultScreen from '@/components/screens/ResultScreen'
+import RoundSummaryScreen from '@/components/screens/RoundSummaryScreen'
 
 const POLL_INTERVAL = 2000
 
@@ -81,9 +82,9 @@ export default function GameRoom({ roomCode }: Props) {
     }
   }, [playerId, fetchState])
 
-  // Action handler
-  const handleAction = useCallback(async (action: string, params: Record<string, unknown> = {}) => {
-    if (!playerId) return
+  // Action handler (returns true on success, false on failure)
+  const handleAction = useCallback(async (action: string, params: Record<string, unknown> = {}): Promise<boolean> => {
+    if (!playerId) return false
     try {
       const res = await fetch(`/api/room/${roomCode}/action`, {
         method: 'POST',
@@ -93,12 +94,14 @@ export default function GameRoom({ roomCode }: Props) {
       const data = await res.json()
       if (!res.ok) {
         alert(data.error ?? 'エラーが発生しました')
-        return
+        return false
       }
       // すぐにポーリング
       await fetchState()
+      return true
     } catch {
       alert('通信エラーが発生しました')
+      return false
     }
   }, [roomCode, playerId, fetchState])
 
@@ -210,7 +213,9 @@ export default function GameRoom({ roomCode }: Props) {
     case 'GUESSING_CLOSED':
       return <GuessingClosedScreen {...commonProps} />
     case 'RESULT_REVEALED':
-      return <ResultScreen {...commonProps} />
+      return <ResultScreen gameState={gameState} playerId={playerId} onAction={handleAction} />
+    case 'ROUND_SUMMARY':
+      return <RoundSummaryScreen gameState={gameState} playerId={playerId} roomCode={roomCode} onAction={handleAction} />
     default:
       return (
         <div className="min-h-dvh flex items-center justify-center">

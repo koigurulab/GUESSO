@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function HomePage() {
   const router = useRouter()
@@ -90,6 +91,11 @@ export default function HomePage() {
           </button>
           <p className="text-center text-white/30 text-xs mt-4">
             友達の飲み会で盛り上がろう🍻
+          </p>
+          <p className="text-center mt-2">
+            <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40">
+              プライバシーポリシー
+            </Link>
           </p>
         </div>
       )}
