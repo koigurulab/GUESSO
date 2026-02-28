@@ -32,11 +32,10 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
 
   const guesserCount = players.filter(p => p.id !== room.asker_player_id).length
 
-  const handleSubmitGuess = async (itemId: string) => {
-    if (submitting || submitted) return
-    setSelected(itemId)
+  const handleConfirm = async () => {
+    if (!selected || submitting || submitted) return
     setSubmitting(true)
-    const ok = await onAction('submit-guess', { guess_top1: itemId })
+    const ok = await onAction('submit-guess', { guess_top1: selected })
     if (ok) setSubmitted(true)
     setSubmitting(false)
   }
@@ -130,16 +129,16 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
           <p className="text-gray-600 text-sm text-center mb-3">
             {asker?.name} さんが{currentRank}位に選んだものは？
           </p>
-          <div className="grid grid-cols-2 gap-3 flex-1 animate-slide-up">
+          <div className="grid grid-cols-2 gap-3 animate-slide-up">
             {availableChoices.map(item => (
               <button
                 key={item.id}
-                onClick={() => handleSubmitGuess(item.id)}
+                onClick={() => setSelected(item.id)}
                 disabled={submitting}
                 className={`
                   glass rounded-3xl p-5 flex flex-col items-center gap-2
                   active:scale-95 transition-all
-                  ${selected === item.id ? 'ring-2 ring-pink-400 glass-strong' : ''}
+                  ${selected === item.id ? 'ring-2 ring-violet-500 glass-strong' : ''}
                 `}
               >
                 <span className="text-5xl">{item.emoji}</span>
@@ -147,14 +146,32 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
               </button>
             ))}
           </div>
-          {isHost && (
-            <button
-              onClick={() => onAction('close-guess')}
-              className="mt-4 btn-secondary w-full"
-            >
-              🔔 今すぐ締め切る
-            </button>
-          )}
+
+          {/* 送信ボタン */}
+          <div className="mt-4 space-y-3">
+            {selected && theme && (
+              <button
+                onClick={handleConfirm}
+                disabled={submitting}
+                className="btn-primary w-full text-lg py-4 flex items-center justify-center gap-2"
+              >
+                {submitting ? '送信中...' : (
+                  <>
+                    <span>{getThemeItem(theme.id, selected)?.emoji}</span>
+                    <span>「{getThemeItem(theme.id, selected)?.label}」で送信</span>
+                  </>
+                )}
+              </button>
+            )}
+            {isHost && (
+              <button
+                onClick={() => onAction('close-guess')}
+                className="btn-secondary w-full"
+              >
+                🔔 今すぐ締め切る
+              </button>
+            )}
+          </div>
         </>
       )}
     </div>
