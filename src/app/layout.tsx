@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#0d0b1e',
+  themeColor: '#F7F5FF',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -35,9 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="min-h-dvh bg-gradient-to-br from-gray-950 via-purple-950/50 to-gray-950">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   )

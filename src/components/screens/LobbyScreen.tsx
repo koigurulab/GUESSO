@@ -30,7 +30,7 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
       <div className="text-center mb-6 animate-fade-in">
         <div className="text-4xl mb-2">🎯</div>
         <h1 className="text-3xl font-black gradient-text">GUESSO</h1>
-        <p className="text-gray-500 text-sm mt-1">みんなが来るのを待ってるよ</p>
+        <p className="text-gray-700 text-sm mt-1">みんなが来るのを待ってるよ</p>
       </div>
 
       {/* Room Code */}
@@ -49,7 +49,7 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
       <div className="glass rounded-3xl p-5 flex-1 mb-4 animate-slide-up">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-gray-700">参加者</h2>
-          <span className="text-gray-500 text-sm">{players.length}/8人</span>
+          <span className="text-gray-600 text-sm">{players.length}/8人</span>
         </div>
         <div className="space-y-2">
           {players.map(p => (
@@ -72,7 +72,7 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
           ))}
         </div>
         {players.length < 2 && (
-          <p className="text-center text-gray-400 text-sm mt-4">
+          <p className="text-center text-gray-600 text-sm mt-4">
             友達を呼んで一緒に遊ぼう！
           </p>
         )}
@@ -89,7 +89,7 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
         </button>
       ) : (
         <div className="glass rounded-2xl py-4 text-center">
-          <p className="text-gray-500 text-sm">⏳ ホストがスタートするのを待ってます</p>
+          <p className="text-gray-700 text-sm">⏳ ホストがスタートするのを待ってます</p>
         </div>
       )}
     </div>
