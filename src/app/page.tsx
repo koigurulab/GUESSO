@@ -68,30 +68,45 @@ export default function HomePage() {
     <div className="min-h-dvh bg-white text-gray-900">
 
       {/* ── Hero ── */}
-      <section className="bg-gradient-to-b from-purple-50 via-pink-50/40 to-white px-5 pt-14 pb-10 text-center">
-        <div className="text-5xl mb-3 animate-bounce-slow">🎯</div>
-        <h1 className="text-5xl font-black tracking-tight mb-2"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          GUESSO
-        </h1>
-        <p className="text-xl font-bold text-gray-800 leading-snug mb-1">
-          一人の<span className="text-purple-600">価値観</span>を、<br />みんなで当て合おう🍻
-        </p>
-        <p className="text-sm text-gray-400 mb-8">飲み会向け・価値観推理ゲーム</p>
+      <section className="bg-gradient-to-b from-purple-50 via-pink-50/50 to-white px-5 pt-14 pb-12 text-center">
+
+        {/* ラベル */}
+        <div className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full mb-5 tracking-wide">
+          🍻 飲み会向け・価値観推理ゲーム
+        </div>
+
+        {/* ロゴ + ふりがな */}
+        <div className="mb-3">
+          <h1
+            className="text-6xl font-black tracking-tight leading-none"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+          >
+            GUESSO
+          </h1>
+          <p className="text-sm font-semibold text-purple-400 tracking-widest mt-1">ゲッソ</p>
+        </div>
+
+        {/* キャッチコピー（Hero主役） */}
+        <h2 className="text-3xl font-black text-gray-900 leading-snug mb-2">
+          一人の<span className="text-purple-600">価値観</span>を、<br />みんなで当て合おう
+        </h2>
+        <p className="text-xl mb-8">🍻</p>
 
         {/* ── CTA Buttons ── */}
         {mode === 'home' && (
-          <div className="space-y-3 max-w-xs mx-auto">
+          <div className="flex flex-col gap-4 max-w-xs mx-auto">
+            {/* 主CTA */}
             <button
               onClick={() => setMode('create')}
-              className="w-full text-white font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-purple-200"
+              className="w-full text-white font-black text-xl py-5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-xl shadow-purple-300"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
             >
               🏠 ルームを作る
             </button>
+            {/* 副CTA */}
             <button
               onClick={() => setMode('join')}
-              className="w-full bg-white border-2 border-purple-200 hover:border-purple-400 text-purple-700 font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="w-full bg-white border-2 border-purple-300 text-purple-700 font-bold text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:border-purple-500 hover:bg-purple-50"
             >
               🚪 ルームに参加
             </button>
@@ -101,26 +116,26 @@ export default function HomePage() {
         {/* ── Create form ── */}
         {mode === 'create' && (
           <div className="max-w-xs mx-auto text-left">
-            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-400 text-sm mb-4 flex items-center gap-1">
+            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-500 font-medium text-sm mb-4 flex items-center gap-1 hover:text-gray-700 transition-colors">
               ← もどる
             </button>
-            <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
-              <h2 className="text-xl font-bold mb-1 text-gray-900">ルームを作成</h2>
-              <p className="text-gray-400 text-sm mb-5">あなたがホストになります</p>
+            <div className="bg-white border border-gray-200 shadow-md rounded-3xl p-6">
+              <h2 className="text-xl font-black mb-1 text-gray-900">ルームを作成</h2>
+              <p className="text-gray-600 text-sm font-medium mb-5">あなたがホストになります</p>
               <form onSubmit={handleCreate} className="space-y-4">
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all font-medium"
                   placeholder="あなたの名前（12文字以内）"
                   value={hostName}
                   onChange={e => setHostName(e.target.value)}
                   maxLength={12}
                   autoFocus
                 />
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
                 <button
                   type="submit"
                   disabled={loading || !hostName.trim()}
-                  className="w-full text-white font-bold py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full text-white font-black py-4 rounded-xl transition-all active:scale-95 disabled:opacity-50 text-lg shadow-lg shadow-purple-200"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
                 >
                   {loading ? '作成中...' : '🎉 作成する'}
@@ -133,15 +148,15 @@ export default function HomePage() {
         {/* ── Join form ── */}
         {mode === 'join' && (
           <div className="max-w-xs mx-auto text-left">
-            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-400 text-sm mb-4 flex items-center gap-1">
+            <button onClick={() => { setMode('home'); setError('') }} className="text-gray-500 font-medium text-sm mb-4 flex items-center gap-1 hover:text-gray-700 transition-colors">
               ← もどる
             </button>
-            <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6">
-              <h2 className="text-xl font-bold mb-1 text-gray-900">ルームに参加</h2>
-              <p className="text-gray-400 text-sm mb-5">ホストからコードを教えてもらおう</p>
+            <div className="bg-white border border-gray-200 shadow-md rounded-3xl p-6">
+              <h2 className="text-xl font-black mb-1 text-gray-900">ルームに参加</h2>
+              <p className="text-gray-600 text-sm font-medium mb-5">ホストからコードを教えてもらおう</p>
               <form onSubmit={handleJoin} className="space-y-4">
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl tracking-widest uppercase placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-2xl tracking-widest uppercase placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all font-bold"
                   placeholder="XXXXXX"
                   value={joinCode}
                   onChange={e => setJoinCode(e.target.value.toUpperCase())}
@@ -149,17 +164,17 @@ export default function HomePage() {
                   autoFocus
                 />
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all font-medium"
                   placeholder="あなたの名前（12文字以内）"
                   value={joinName}
                   onChange={e => setJoinName(e.target.value)}
                   maxLength={12}
                 />
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
                 <button
                   type="submit"
                   disabled={loading || !joinCode.trim() || !joinName.trim()}
-                  className="w-full text-white font-bold py-3 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full text-white font-black py-4 rounded-xl transition-all active:scale-95 disabled:opacity-50 text-lg shadow-lg shadow-purple-200"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)' }}
                 >
                   {loading ? '参加中...' : '🚀 参加する'}
@@ -174,9 +189,10 @@ export default function HomePage() {
       {mode === 'home' && (
         <>
           {/* ── Game preview ── */}
-          <section className="px-5 py-10">
-            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-4">こんなゲームです</p>
-            <div className="max-w-sm mx-auto rounded-3xl overflow-hidden border border-purple-100 shadow-sm">
+          <section className="px-5 py-12">
+            <p className="text-center text-xs font-black text-purple-500 uppercase tracking-widest mb-1">こんなゲームです</p>
+            <h2 className="text-center text-2xl font-black text-gray-900 mb-6">ゲームイメージ</h2>
+            <div className="max-w-sm mx-auto rounded-3xl overflow-hidden border border-purple-100 shadow-md">
               {/* Card header */}
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 flex items-center gap-2">
                 <span className="text-xl">💕</span>
@@ -195,32 +211,32 @@ export default function HomePage() {
                   <div
                     key={rank}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                      state === 'correct' ? 'bg-green-50 border border-green-100' :
+                      state === 'correct' ? 'bg-green-50 border border-green-200' :
                       state === 'active'  ? 'bg-purple-50 border border-purple-200 ring-1 ring-purple-300' :
                       state === 'hint'    ? 'bg-yellow-50 border border-yellow-200' :
-                      'bg-gray-50 border border-gray-100 opacity-50'
+                      'bg-gray-50 border border-gray-200 opacity-60'
                     }`}
                   >
-                    <span className="w-7 text-right text-xs font-bold text-gray-400">{rank}位</span>
+                    <span className="w-7 text-right text-xs font-bold text-gray-600">{rank}位</span>
                     <span className="text-base">{state === 'hidden' ? '❓' : emoji}</span>
-                    <span className={`font-semibold ${state === 'hidden' ? 'text-gray-300' : state === 'active' ? 'text-purple-600' : 'text-gray-700'}`}>
+                    <span className={`font-semibold ${state === 'hidden' ? 'text-gray-400' : state === 'active' ? 'text-purple-700' : 'text-gray-800'}`}>
                       {label}
                     </span>
-                    {state === 'correct' && <span className="ml-auto text-green-500 text-xs font-bold">✓ 正解</span>}
-                    {state === 'hint'    && <span className="ml-auto text-yellow-500 text-xs font-bold">💡 ヒント</span>}
-                    {state === 'active'  && <span className="ml-auto text-purple-400 text-xs font-bold">← 予想中</span>}
+                    {state === 'correct' && <span className="ml-auto text-green-600 text-xs font-bold">✓ 正解</span>}
+                    {state === 'hint'    && <span className="ml-auto text-yellow-600 text-xs font-bold">💡 ヒント</span>}
+                    {state === 'active'  && <span className="ml-auto text-purple-600 text-xs font-bold">← 予想中</span>}
                   </div>
                 ))}
               </div>
-              <div className="bg-purple-50 px-4 py-3 text-center">
-                <p className="text-xs text-purple-500 font-semibold">4位だけヒントとして公開される！他は順番に当てていこう</p>
+              <div className="bg-purple-50 px-4 py-3 text-center border-t border-purple-100">
+                <p className="text-xs text-purple-700 font-semibold">4位だけヒントとして公開される！他は順番に当てていこう</p>
               </div>
             </div>
           </section>
 
           {/* ── How to play ── */}
-          <section className="bg-gray-50 px-5 py-10">
-            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">HOW TO PLAY</p>
+          <section className="bg-gray-50 px-5 py-12">
+            <p className="text-center text-xs font-black text-purple-500 uppercase tracking-widest mb-1">HOW TO PLAY</p>
             <h2 className="text-center text-2xl font-black text-gray-900 mb-8">あそびかた</h2>
             <div className="max-w-sm mx-auto space-y-0">
               {[
@@ -259,15 +275,15 @@ export default function HomePage() {
                       {step}
                     </div>
                     {i < arr.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-purple-100 my-1 min-h-[20px]" />
+                      <div className="w-0.5 flex-1 bg-purple-200 my-1 min-h-[20px]" />
                     )}
                   </div>
-                  <div className="pb-6">
+                  <div className="pb-7">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xl">{emoji}</span>
-                      <span className="font-bold text-gray-900">{title}</span>
+                      <span className="font-black text-gray-900">{title}</span>
                     </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                    <p className="text-sm text-gray-600 font-medium leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -275,8 +291,8 @@ export default function HomePage() {
           </section>
 
           {/* ── Themes ── */}
-          <section className="px-5 py-10">
-            <p className="text-center text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">THEMES</p>
+          <section className="px-5 py-12">
+            <p className="text-center text-xs font-black text-purple-500 uppercase tracking-widest mb-1">THEMES</p>
             <h2 className="text-center text-2xl font-black text-gray-900 mb-6">テーマ</h2>
             <div className="flex gap-3 max-w-sm mx-auto">
               {[
@@ -284,21 +300,21 @@ export default function HomePage() {
                 { emoji: '🌈', label: '人生観', items: '自由・お金・健康…' },
                 { emoji: '🍸', label: 'デート', items: '雰囲気・映え・リード…' },
               ].map(({ emoji, label, items }) => (
-                <div key={label} className="flex-1 bg-purple-50 border border-purple-100 rounded-2xl px-2 py-4 text-center">
+                <div key={label} className="flex-1 bg-purple-50 border border-purple-200 rounded-2xl px-2 py-4 text-center">
                   <div className="text-3xl mb-2">{emoji}</div>
-                  <div className="font-bold text-purple-700 text-sm mb-1">{label}</div>
-                  <div className="text-xs text-gray-400 leading-tight">{items}</div>
+                  <div className="font-black text-purple-800 text-sm mb-1">{label}</div>
+                  <div className="text-xs text-gray-600 font-medium leading-tight">{items}</div>
                 </div>
               ))}
             </div>
           </section>
 
           {/* ── Bottom CTA ── */}
-          <section className="px-5 pb-14 text-center">
-            <p className="text-gray-400 text-sm mb-5">さあ、飲み会をもっと盛り上げよう！</p>
+          <section className="px-5 pb-16 pt-2 text-center">
+            <p className="text-gray-700 font-semibold text-base mb-6">さあ、飲み会をもっと盛り上げよう！</p>
             <button
               onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMode('create') }}
-              className="text-white font-bold text-lg py-4 px-10 rounded-2xl shadow-lg shadow-purple-200 transition-all active:scale-95"
+              className="text-white font-black text-xl py-5 px-12 rounded-2xl shadow-xl shadow-purple-300 transition-all active:scale-95"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #ec4899)' }}
             >
               🍻 今すぐはじめる
@@ -306,8 +322,8 @@ export default function HomePage() {
           </section>
 
           {/* ── Footer ── */}
-          <footer className="px-5 pb-8 pt-6 text-center border-t border-gray-100">
-            <Link href="/privacy" className="text-gray-300 text-xs hover:text-gray-500 transition-colors">
+          <footer className="px-5 pb-8 pt-6 text-center border-t border-gray-200">
+            <Link href="/privacy" className="text-gray-500 text-xs hover:text-gray-700 transition-colors font-medium">
               プライバシーポリシー
             </Link>
           </footer>
