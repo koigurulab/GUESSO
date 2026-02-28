@@ -3,6 +3,7 @@
 import { Fragment, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { trackEvent } from '@/lib/analytics'
 
 export default function HomePage() {
   const router = useRouter()
@@ -30,6 +31,7 @@ export default function HomePage() {
         `guesso_${data.room_code}`,
         JSON.stringify({ playerId: data.player_id, playerName: hostName.trim() })
       )
+      trackEvent('room_created', { room_code: data.room_code })
       router.push(`/room/${data.room_code}`)
     } catch {
       setError('通信エラーが発生しました')
@@ -56,6 +58,7 @@ export default function HomePage() {
         `guesso_${data.room_code}`,
         JSON.stringify({ playerId: data.player_id, playerName: joinName.trim() })
       )
+      trackEvent('room_joined', { room_code: data.room_code })
       router.push(`/room/${data.room_code}`)
     } catch {
       setError('通信エラーが発生しました')
@@ -127,14 +130,14 @@ export default function HomePage() {
         {mode === 'home' && (
           <div className="flex flex-col gap-3 max-w-[300px] mx-auto">
             <button
-              onClick={() => setMode('create')}
+              onClick={() => { trackEvent('cta_clicked', { action: 'create_room' }); setMode('create') }}
               className="w-full text-white font-black text-lg py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-purple-200"
               style={gradientBg}
             >
               🏠 ルームを作る
             </button>
             <button
-              onClick={() => setMode('join')}
+              onClick={() => { trackEvent('cta_clicked', { action: 'join_room' }); setMode('join') }}
               className="w-full bg-[#F7F5FF] border-2 border-purple-200 text-purple-700 font-bold text-base py-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 hover:border-purple-400"
             >
               🚪 ルームに参加
@@ -379,7 +382,7 @@ export default function HomePage() {
             <p className="text-gray-800 font-bold text-base mb-1">さあ、飲み会をもっと盛り上げよう！</p>
             <p className="text-gray-700 text-xs font-medium mb-6">アプリ不要・無料で今すぐ遊べる</p>
             <button
-              onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setMode('create') }}
+              onClick={() => { trackEvent('cta_clicked', { action: 'create_room_bottom' }); window.scrollTo({ top: 0, behavior: 'smooth' }); setMode('create') }}
               className="text-white font-black text-lg py-4 px-10 rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-200"
               style={gradientBg}
             >

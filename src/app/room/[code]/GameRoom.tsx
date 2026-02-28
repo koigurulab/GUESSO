@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { RoomStateResponse } from '@/lib/types'
+import { trackEvent } from '@/lib/analytics'
 
 import LobbyScreen from '@/components/screens/LobbyScreen'
 import ThemeSelectScreen from '@/components/screens/ThemeSelectScreen'
@@ -34,9 +35,11 @@ export default function GameRoom({ roomCode }: Props) {
   const [joinError, setJoinError] = useState('')
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  const prevStateRef = useRef<string | null>(null)
 
   // Load player from localStorage
   useEffect(() => {
+    trackEvent('room_page_viewed', { room_code: roomCode })
     const stored = localStorage.getItem(`guesso_${roomCode}`)
     if (stored) {
       try {
@@ -66,6 +69,18 @@ export default function GameRoom({ roomCode }: Props) {
       const data: RoomStateResponse = await res.json()
       setGameState(data)
       setLoading(false)
+
+      // ゲーム状態が変わったタイミングでイベント送信
+      const newState = data.room.state
+      if (prevStateRef.current !== newState) {
+        trackEvent('game_phase_changed', {
+          from_phase: prevStateRef.current ?? 'none',
+          to_phase: newState,
+          room_code: roomCode,
+          round: data.room.current_round ?? 1,
+        })
+        prevStateRef.current = newState
+      }
     } catch (e) {
       console.error('[fetchState]', e)
       // ネットワークエラーは静かに無視（ポーリングで再試行）
@@ -96,6 +111,12 @@ export default function GameRoom({ roomCode }: Props) {
         alert(data.error ?? 'エラーが発生しました')
         return false
       }
+      // アクション成功をトラッキング
+      trackEvent('game_action', {
+        action,
+        room_code: roomCode,
+        ...(typeof params.theme_id === 'string' ? { theme_id: params.theme_id } : {}),
+      })
       // すぐにポーリング
       await fetchState()
       return true
@@ -126,6 +147,7 @@ export default function GameRoom({ roomCode }: Props) {
         `guesso_${roomCode}`,
         JSON.stringify({ playerId: data.player_id, playerName: joinName.trim() })
       )
+      trackEvent('room_joined_via_link', { room_code: roomCode })
       setPlayerId(data.player_id)
       setPlayerName(joinName.trim())
       setLoading(true)
