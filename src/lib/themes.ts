@@ -13,9 +13,9 @@ export const THEMES: Theme[] = [
       { id: 'personality', emoji: '💝', label: '性格' },
       { id: 'height',      emoji: '📏', label: '身長' },
       { id: 'income',      emoji: '💰', label: '収入' },
-      { id: 'values',      emoji: '🌟', label: '価値観' },
-      { id: 'talk',        emoji: '💬', label: '会話力' },
-      { id: 'life_skill',  emoji: '🏠', label: '生活力' },
+      { id: 'chemistry',   emoji: '🔥', label: '体の相性' },
+      { id: 'style',       emoji: '💃', label: 'スタイル' },
+      { id: 'frequency',   emoji: '📅', label: '会える頻度' },
     ],
   },
   {
@@ -31,7 +31,7 @@ export const THEMES: Theme[] = [
       { id: 'family',  emoji: '👨‍👩‍👧', label: '家族' },
       { id: 'work',    emoji: '🏢', label: '仕事' },
       { id: 'friends', emoji: '👫', label: '友達' },
-      { id: 'fun',     emoji: '🎮', label: '楽しみ' },
+      { id: 'hobby',   emoji: '🎨', label: '趣味' },
     ],
   },
   {
