@@ -16,15 +16,17 @@ import ResultScreen from '@/components/screens/ResultScreen'
 import RoundSummaryScreen from '@/components/screens/RoundSummaryScreen'
 
 // ── ポーリング間隔（状態ごとに調整）──────────────────────────
-// 変化が起きやすい状態は短く、待機系は長くしてDB負荷を削減
 const POLL_INTERVALS: Partial<Record<string, number>> = {
-  WAITING_PLAYERS: 5000,   // 参加待ちは5秒（頻繁な変化なし）
-  GUESSING_OPEN:   2000,   // 予想中のみ2秒（guessカウントの反応性が必要）
+  WAITING_PLAYERS: 5000,
+  GUESSING_OPEN:   2000,
 }
-const DEFAULT_POLL_MS = 3000  // その他は3秒
+const DEFAULT_POLL_MS = 3000
 
-// last_seen を更新する間隔（秒）
+// last_seen を更新する間隔
 const LAST_SEEN_INTERVAL_MS = 30_000
+
+// ポーリング連続失敗してから「接続中...」バナーを出すまでの回数
+const OFFLINE_THRESHOLD = 3
 
 interface Props {
   roomCode: string
@@ -43,23 +45,30 @@ export default function GameRoom({ roomCode }: Props) {
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState('')
 
+  // ── 通知系 state ──────────────────────────────────────────
+  /** alert() の代わり: アクションエラーをトーストで表示 */
+  const [actionError, setActionError] = useState<string | null>(null)
+  /** 連続ポーリング失敗時の「接続中...」バナー */
+  const [isOffline, setIsOffline] = useState(false)
+
   // ── ポーリング制御用 ref ──────────────────────────────────
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
-  // ETag: 前回レスポンスの rooms.updated_at を保持
   const updatedAtRef = useRef<string>('')
-  // gameState を ref でも保持（タイムアウトコールバック内で最新値を読むため）
   const gameStateRef = useRef<RoomStateResponse | null>(null)
-  // last_seen を最後に送った時刻
   const lastSeenSentAtRef = useRef<number>(0)
-  // フェーズ遷移追跡（GA4用）
   const prevStateRef = useRef<string | null>(null)
+  const pollFailCountRef = useRef<number>(0)
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // gameState が変わったら ref も同期
-  useEffect(() => {
-    gameStateRef.current = gameState
-  }, [gameState])
+  useEffect(() => { gameStateRef.current = gameState }, [gameState])
 
-  /** 現在の room.state に応じたポーリング間隔を返す */
+  /** アクションエラートーストを表示（3秒で自動消去） */
+  const showActionError = useCallback((msg: string) => {
+    setActionError(msg)
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current)
+    errorTimerRef.current = setTimeout(() => setActionError(null), 3000)
+  }, [])
+
   const getPollMs = (): number => {
     const state = gameStateRef.current?.room.state ?? ''
     return POLL_INTERVALS[state] ?? DEFAULT_POLL_MS
@@ -87,7 +96,6 @@ export default function GameRoom({ roomCode }: Props) {
     const id = pid ?? playerId
     if (!id) return
 
-    // last_seen 更新フラグ（クライアント側で30秒間隔に制限）
     const now = Date.now()
     let updateSeen = false
     if (now - lastSeenSentAtRef.current >= LAST_SEEN_INTERVAL_MS) {
@@ -97,7 +105,6 @@ export default function GameRoom({ roomCode }: Props) {
 
     try {
       const params = new URLSearchParams({ player_id: id })
-      // ETagを送信: ver が一致すれば API は {changed: false} を返す
       if (updatedAtRef.current) params.set('ver', updatedAtRef.current)
       if (updateSeen) params.set('update_seen', '1')
 
@@ -111,13 +118,15 @@ export default function GameRoom({ roomCode }: Props) {
 
       const data = await res.json()
 
-      // ETagヒット: 状態変化なし → stateを更新せず早期リターン
+      // 成功 → オフラインフラグをリセット
+      pollFailCountRef.current = 0
+      setIsOffline(false)
+
       if ('changed' in data && data.changed === false) {
         setLoading(false)
         return
       }
 
-      // ゲーム状態が変わったタイミングでGA4イベント送信
       const newRoomState = data.room?.state
       if (newRoomState && prevStateRef.current !== newRoomState) {
         trackEvent('game_phase_changed', {
@@ -129,20 +138,21 @@ export default function GameRoom({ roomCode }: Props) {
         prevStateRef.current = newRoomState
       }
 
-      // ETag更新
       if (data.updated_at) updatedAtRef.current = data.updated_at
-
       setGameState(data)
       setLoading(false)
     } catch (e) {
       console.error('[fetchState]', e)
-      // ネットワークエラーは静かに無視（ポーリングで再試行）
+      // 連続失敗カウントを増やし、閾値を超えたらバナーを表示
+      pollFailCountRef.current += 1
+      if (pollFailCountRef.current >= OFFLINE_THRESHOLD) {
+        setIsOffline(true)
+      }
+      // ポーリングは引き続き継続（自動復帰）
     }
   }, [roomCode, playerId])
 
-  // ── アダプティブポーリング（setTimeout チェーン）──────────
-  // setInterval と違い、前のリクエストが完了してから次を予約できる。
-  // また gameState に応じて間隔を動的に変えられる。
+  // アダプティブポーリング（setTimeout チェーン）
   useEffect(() => {
     if (!playerId) return
 
@@ -165,35 +175,65 @@ export default function GameRoom({ roomCode }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerId, fetchState])
 
-  // Action handler (returns true on success, false on failure)
+  // Action handler
   const handleAction = useCallback(async (action: string, params: Record<string, unknown> = {}): Promise<boolean> => {
     if (!playerId) return false
+
+    const doFetch = () => fetch(`/api/room/${roomCode}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, player_id: playerId, ...params }),
+    })
+
     try {
-      const res = await fetch(`/api/room/${roomCode}/action`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, player_id: playerId, ...params }),
-      })
-      const data = await res.json()
+      let res = await doFetch()
+
+      // ネットワーク系エラーではなくAPI側エラーの場合
       if (!res.ok) {
-        alert(data.error ?? 'エラーが発生しました')
+        const data = await res.json()
+
+        // 状態ズレによる競合エラーは静かにリフレッシュして終了
+        // （「現在 X 状態のため〜」系メッセージ）
+        if (res.status === 400 && typeof data.error === 'string' && data.error.includes('状態のため')) {
+          updatedAtRef.current = ''
+          await fetchState()
+          return false
+        }
+
+        showActionError(data.error ?? 'エラーが発生しました')
         return false
       }
-      // アクション成功をトラッキング
+
+      const data = await res.json()
       trackEvent('game_action', {
         action,
         room_code: roomCode,
         ...(typeof params.theme_id === 'string' ? { theme_id: params.theme_id } : {}),
       })
-      // アクション後はETagをリセットして強制フェッチ
       updatedAtRef.current = ''
       await fetchState()
       return true
     } catch {
-      alert('通信エラーが発生しました')
-      return false
+      // ネットワークエラー: 1回だけ自動リトライ
+      try {
+        await new Promise(r => setTimeout(r, 1500))
+        const retry = await doFetch()
+        if (!retry.ok) {
+          const data = await retry.json()
+          showActionError(data.error ?? '操作に失敗しました。もう一度お試しください')
+          return false
+        }
+        trackEvent('game_action', { action, room_code: roomCode, retried: true })
+        updatedAtRef.current = ''
+        await fetchState()
+        return true
+      } catch {
+        // リトライも失敗 → トーストで通知（alertではない）
+        showActionError('通信に失敗しました。少し待って再度お試しください')
+        return false
+      }
     }
-  }, [roomCode, playerId, fetchState])
+  }, [roomCode, playerId, fetchState, showActionError])
 
   // Join handler
   const handleJoin = async (e: React.FormEvent) => {
@@ -241,7 +281,6 @@ export default function GameRoom({ roomCode }: Props) {
     )
   }
 
-  // Not joined → show join form
   if (!playerId) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4">
@@ -283,35 +322,54 @@ export default function GameRoom({ roomCode }: Props) {
     )
   }
 
-  // Route to correct screen based on room state
   const state = gameState.room.state
-
   const commonProps = { gameState, playerId, roomCode, onAction: handleAction }
 
-  switch (state) {
-    case 'WAITING_PLAYERS':
-      return <LobbyScreen {...commonProps} />
-    case 'SELECT_THEME':
-      return <ThemeSelectScreen {...commonProps} />
-    case 'SELECT_ASKER':
-      return <ChooseAskerScreen {...commonProps} />
-    case 'ASKER_RANKING':
-      return <RankInputScreen {...commonProps} />
-    case 'REVEAL_MIDDLE':
-      return <RevealMiddleScreen {...commonProps} />
-    case 'GUESSING_OPEN':
-      return <GuessingScreen {...commonProps} />
-    case 'GUESSING_CLOSED':
-      return <GuessingClosedScreen {...commonProps} />
-    case 'RESULT_REVEALED':
-      return <ResultScreen gameState={gameState} playerId={playerId} onAction={handleAction} />
-    case 'ROUND_SUMMARY':
-      return <RoundSummaryScreen gameState={gameState} playerId={playerId} roomCode={roomCode} onAction={handleAction} />
-    default:
-      return (
-        <div className="min-h-dvh flex items-center justify-center">
-          <p className="text-white/40">不明な状態: {state}</p>
+  return (
+    <>
+      {/* ── 接続中バナー（ポーリング連続失敗時） ── */}
+      {isOffline && (
+        <div
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 py-2 px-4 text-sm font-bold text-white"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+        >
+          <span className="inline-block w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+          接続中... 自動で再接続します
         </div>
-      )
-  }
+      )}
+
+      {/* ── アクションエラートースト（alert() の代替） ── */}
+      {actionError && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xs w-[90vw] rounded-2xl px-4 py-3 text-sm font-bold text-white text-center shadow-xl"
+          style={{ background: 'rgba(220,38,38,0.92)', backdropFilter: 'blur(8px)' }}
+        >
+          ⚠️ {actionError}
+        </div>
+      )}
+
+      {/* ── メイン画面 ── */}
+      {(() => {
+        switch (state) {
+          case 'WAITING_PLAYERS':   return <LobbyScreen {...commonProps} />
+          case 'SELECT_THEME':      return <ThemeSelectScreen {...commonProps} />
+          case 'SELECT_ASKER':      return <ChooseAskerScreen {...commonProps} />
+          case 'ASKER_RANKING':     return <RankInputScreen {...commonProps} />
+          case 'REVEAL_MIDDLE':     return <RevealMiddleScreen {...commonProps} />
+          case 'GUESSING_OPEN':     return <GuessingScreen {...commonProps} />
+          case 'GUESSING_CLOSED':   return <GuessingClosedScreen {...commonProps} />
+          case 'RESULT_REVEALED':
+            return <ResultScreen gameState={gameState} playerId={playerId} onAction={handleAction} />
+          case 'ROUND_SUMMARY':
+            return <RoundSummaryScreen gameState={gameState} playerId={playerId} roomCode={roomCode} onAction={handleAction} />
+          default:
+            return (
+              <div className="min-h-dvh flex items-center justify-center">
+                <p className="text-white/40">不明な状態: {state}</p>
+              </div>
+            )
+        }
+      })()}
+    </>
+  )
 }
