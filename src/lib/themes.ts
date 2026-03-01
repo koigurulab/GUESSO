@@ -90,11 +90,40 @@ export const FETISH_THEMES: Theme[] = [
 
 // LINE認証不要・Stripe課金で解放する人ランキングテーマ（is_person_rank: true, items は空）
 export const PERSON_RANK_THEMES: Theme[] = [
-  { id: 'pr-lover',   title: '恋人にするなら誰？',         emoji: '💕', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
-  { id: 'pr-type',    title: '一番タイプな人は？',          emoji: '💘', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
-  { id: 'pr-popular', title: '一番モテそうなのは誰？',      emoji: '🌟', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
-  { id: 'pr-talk',    title: '話しやすいのは誰？',          emoji: '💬', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
-  { id: 'pr-travel',  title: '旅行に一緒に行きたいのは誰？', emoji: '✈️', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  // 💕 恋愛・ドキドキ系
+  { id: 'pr-type',      title: '一番タイプな人は？',             emoji: '💘', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-popular',   title: '一番モテそうなのは誰？',         emoji: '🌟', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-kiss',      title: 'キスが上手そうなのは誰？',       emoji: '💋', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-clingy',    title: '付き合ったら束縛しそうなのは誰？', emoji: '🔒', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  // 🔥 本音・フェロモン系
+  { id: 'pr-charisma',  title: '一番色気あるのは誰？',           emoji: '✨', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-night',     title: '夜が強そうなのは誰？',           emoji: '🌙', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-erotic',    title: '正直エロそうなのは誰？',         emoji: '🔥', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-ds',        title: '一番ドSそうなのは誰？',          emoji: '😈', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  // 😈 毒舌・キャラ系
+  { id: 'pr-cheat',     title: '浮気しそうなのは誰？',           emoji: '💔', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-drunk',     title: '酔ったら面倒くさそうなのは誰？', emoji: '🍺', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-selfish',   title: '一番ワガママそうなのは誰？',     emoji: '👑', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-heartbreak',title: '失恋したら一番引きずりそうなのは誰？', emoji: '😢', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+]
+
+// 人ランキングをジャンル別にグループ化した定義（ThemeSelectScreen 用）
+export const PERSON_RANK_GENRES = [
+  {
+    id: 'love',
+    label: '💕 恋愛・ドキドキ系',
+    themeIds: ['pr-type', 'pr-popular', 'pr-kiss', 'pr-clingy'],
+  },
+  {
+    id: 'vibe',
+    label: '🔥 本音・フェロモン系',
+    themeIds: ['pr-charisma', 'pr-night', 'pr-erotic', 'pr-ds'],
+  },
+  {
+    id: 'roast',
+    label: '😈 毒舌・キャラ系',
+    themeIds: ['pr-cheat', 'pr-drunk', 'pr-selfish', 'pr-heartbreak'],
+  },
 ]
 
 export const THEMES: Theme[] = [...FREE_THEMES, ...FETISH_THEMES, ...PERSON_RANK_THEMES]

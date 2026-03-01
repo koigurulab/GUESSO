@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FREE_THEMES, FETISH_THEMES, PERSON_RANK_THEMES } from '@/lib/themes'
+import { FREE_THEMES, FETISH_THEMES, PERSON_RANK_THEMES, PERSON_RANK_GENRES } from '@/lib/themes'
 import { hasPurchased } from '@/lib/purchase'
 import type { RoomStateResponse } from '@/lib/types'
 
@@ -257,7 +257,7 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
                   )}
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  恋人・モテ・旅行...仲間をランク付け！
+                  タイプ・色気・毒舌...12テーマで仲間をランク付け！
                 </p>
               </div>
               <span className="text-gray-400 text-lg">{personRankExpanded ? '∨' : '›'}</span>
@@ -268,14 +268,28 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
           {personRankExpanded && (
             <div className="border-t border-white/30 px-5 pb-5 pt-4 space-y-3">
 
-              {/* テーマ一覧 */}
-              <div className="space-y-2">
-                {PERSON_RANK_THEMES.map(theme => (
-                  <div key={theme.id} className="bg-white/30 rounded-2xl px-4 py-3">
-                    <p className="text-sm font-bold text-gray-700">{theme.emoji} {theme.title}</p>
-                  </div>
-                ))}
-              </div>
+              {/* テーマ一覧（ジャンル別・未購入プレビュー） */}
+              {!purchased && (
+                <div className="space-y-3">
+                  {PERSON_RANK_GENRES.map(genre => (
+                    <div key={genre.id}>
+                      <p className="text-xs font-bold text-gray-400 mb-1.5 px-1">{genre.label}</p>
+                      <div className="space-y-1">
+                        {genre.themeIds.map(tid => {
+                          const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
+                          if (!theme) return null
+                          return (
+                            <div key={tid} className="bg-white/30 rounded-xl px-3 py-2 flex items-center gap-2">
+                              <span className="text-base">{theme.emoji}</span>
+                              <p className="text-sm font-bold text-gray-700">{theme.title}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* 未購入: 購入ボタン（ホストのみ） */}
               {!purchased && isHost && (
@@ -302,24 +316,34 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
                 </p>
               )}
 
-              {/* 購入済み + ホスト: テーマ選択ボタン */}
+              {/* 購入済み + ホスト: ジャンル別テーマ選択ボタン */}
               {purchased && isHost && (
-                <>
-                  <p className="text-sm text-gray-600 text-center font-bold">テーマを選んでください</p>
-                  {PERSON_RANK_THEMES.map(theme => (
-                    <button
-                      key={theme.id}
-                      onClick={() => onAction('select-theme', { theme_id: theme.id })}
-                      className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl p-4 text-left transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{theme.emoji}</span>
-                        <p className="font-bold text-gray-900 text-sm flex-1">{theme.title}</p>
-                        <span className="text-gray-400">›</span>
+                <div className="space-y-4">
+                  {PERSON_RANK_GENRES.map(genre => (
+                    <div key={genre.id}>
+                      <p className="text-xs font-bold text-gray-400 mb-1.5 px-1">{genre.label}</p>
+                      <div className="space-y-1.5">
+                        {genre.themeIds.map(tid => {
+                          const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
+                          if (!theme) return null
+                          return (
+                            <button
+                              key={tid}
+                              onClick={() => onAction('select-theme', { theme_id: tid })}
+                              className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl px-4 py-3 text-left transition-all"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-xl">{theme.emoji}</span>
+                                <p className="font-bold text-gray-900 text-sm flex-1">{theme.title}</p>
+                                <span className="text-gray-400">›</span>
+                              </div>
+                            </button>
+                          )
+                        })}
                       </div>
-                    </button>
+                    </div>
                   ))}
-                </>
+                </div>
               )}
 
               {/* 購入済み + 非ホスト */}
