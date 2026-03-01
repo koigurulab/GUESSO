@@ -88,7 +88,16 @@ export const FETISH_THEMES: Theme[] = [
   },
 ]
 
-export const THEMES: Theme[] = [...FREE_THEMES, ...FETISH_THEMES]
+// LINE認証不要・Stripe課金で解放する人ランキングテーマ（is_person_rank: true, items は空）
+export const PERSON_RANK_THEMES: Theme[] = [
+  { id: 'pr-lover',   title: '恋人にするなら誰？',         emoji: '💕', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-type',    title: '一番タイプな人は？',          emoji: '💘', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-popular', title: '一番モテそうなのは誰？',      emoji: '🌟', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-talk',    title: '話しやすいのは誰？',          emoji: '💬', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-travel',  title: '旅行に一緒に行きたいのは誰？', emoji: '✈️', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+]
+
+export const THEMES: Theme[] = [...FREE_THEMES, ...FETISH_THEMES, ...PERSON_RANK_THEMES]
 
 export function getTheme(id: string): Theme | undefined {
   return THEMES.find(t => t.id === id)
@@ -96,4 +105,18 @@ export function getTheme(id: string): Theme | undefined {
 
 export function getThemeItem(themeId: string, itemId: string) {
   return getTheme(themeId)?.items.find(i => i.id === itemId)
+}
+
+/**
+ * 人ランキングモードで予想する順位の配列を計算する
+ * N=3 → [1,2], N=4 → [1,2,3], N=5 → [1,2,4], N=6 → [1,2,4,5], N=7 → [1,2,4,5,6]
+ * （N>=5 のとき3位はヒントとして公開されるためスキップ、N位は最下位として自動公開）
+ */
+export function computePersonRankSequence(N: number): number[] {
+  const seq: number[] = []
+  for (let r = 1; r < N; r++) {
+    if (N >= 5 && r === 3) continue  // 3位はヒント公開済みのためスキップ
+    seq.push(r)
+  }
+  return seq
 }

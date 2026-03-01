@@ -69,7 +69,7 @@ function SortableItem({
       <span className={`text-xl font-black w-8 text-center ${rankColor}`}>
         {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}
       </span>
-      <span className="text-3xl">{item.emoji}</span>
+      {item.emoji && <span className="text-3xl">{item.emoji}</span>}
       <span className="font-bold flex-1 text-lg text-gray-900">{item.label}</span>
       {!disabled && <span className="text-gray-400 text-xl">⠿</span>}
     </div>
@@ -77,13 +77,32 @@ function SortableItem({
 }
 
 export default function RankInputScreen({ gameState, playerId, onAction }: Props) {
-  const { room, players, theme } = gameState
+  const { room, players, theme, round } = gameState
   const isAsker = room.asker_player_id === playerId
   const asker = players.find(p => p.id === room.asker_player_id)
+  const isPersonRank = round?.is_person_rank ?? false
 
-  const [items, setItems] = useState<ThemeItem[]>(theme?.items ?? [])
+  // 人ランキングの場合: target_player_ids からアイテムを構築
+  // 通常の場合: theme.items を使用
+  const buildItems = (): ThemeItem[] => {
+    if (isPersonRank && round?.target_player_ids) {
+      return round.target_player_ids
+        .map(id => {
+          const p = players.find(pl => pl.id === id)
+          return p ? { id: p.id, emoji: '', label: p.name } : null
+        })
+        .filter((x): x is ThemeItem => x !== null)
+    }
+    return theme?.items ?? []
+  }
+
+  const [items, setItems] = useState<ThemeItem[]>(buildItems())
   const [confirmed, setConfirmed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+
+  const N = items.length
+  // ヒント位置: 人ランキングN>=5なら3位（index 2）、通常なら4位（index 3）、人ランキングN<5はなし
+  const hintIndex = isPersonRank ? (N >= 5 ? 2 : -1) : 3
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -124,7 +143,7 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
           </h2>
           <p className="text-gray-600 text-lg">ランキングを入力中...</p>
           <div className="mt-6 flex gap-1 justify-center">
-            {[0,1,2].map(i => (
+            {[0, 1, 2].map(i => (
               <div
                 key={i}
                 className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"
@@ -132,13 +151,28 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
               />
             ))}
           </div>
-          {theme && (
+          {theme && !isPersonRank && (
             <div className="mt-6 glass rounded-2xl p-4">
               <p className="text-gray-500 text-xs mb-2">テーマ: {theme.title} {theme.emoji}</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {theme.items.map(item => (
                   <span key={item.id} className="text-lg">{item.emoji}</span>
                 ))}
+              </div>
+            </div>
+          )}
+          {isPersonRank && round?.target_player_ids && (
+            <div className="mt-6 glass rounded-2xl p-4">
+              <p className="text-gray-500 text-xs mb-2">テーマ: {theme?.emoji} {theme?.title}</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {round.target_player_ids.map(id => {
+                  const p = players.find(pl => pl.id === id)
+                  return p ? (
+                    <span key={id} className="text-xs glass rounded-xl px-2 py-1 text-gray-700">
+                      {p.name}
+                    </span>
+                  ) : null
+                })}
               </div>
             </div>
           )}
@@ -153,9 +187,9 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
         <div className="text-3xl mb-1">{theme?.emoji}</div>
         <h2 className="text-xl font-black gradient-text">{theme?.title}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          あなたにとって大切な順に並べよう
+          {isPersonRank ? '正直な順にランク付けしよう' : 'あなたにとって大切な順に並べよう'}
         </p>
-        <p className="text-gray-400 text-xs mt-1">↑ 1位が一番大切 ↓</p>
+        <p className="text-gray-400 text-xs mt-1">↑ 1位が一番 ↓</p>
       </div>
 
       {confirmed ? (
@@ -167,9 +201,13 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
             {items.map((item, idx) => (
               <div key={item.id} className="glass rounded-2xl px-4 py-2 flex items-center gap-3">
                 <span className="text-sm font-bold text-gray-500 w-6 text-center">{idx + 1}</span>
-                <span className="text-2xl">{item.emoji}</span>
+                {item.emoji && <span className="text-2xl">{item.emoji}</span>}
                 <span className="font-semibold text-gray-900">{item.label}</span>
-                {idx === 3 && <span className="ml-auto text-xs text-pink-600 font-bold">4位（公開）</span>}
+                {idx === hintIndex && hintIndex >= 0 && (
+                  <span className="ml-auto text-xs text-pink-600 font-bold">
+                    {hintIndex + 1}位（公開）
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -190,11 +228,25 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
             </SortableContext>
           </DndContext>
 
-          <div className="mt-5 glass rounded-3xl p-4 mb-4 text-center">
-            <p className="text-gray-600 text-xs">
-              📌 4位（真ん中）の <strong className="text-pink-600">{items[3]?.emoji} {items[3]?.label}</strong> だけが全員に公開されます
-            </p>
-          </div>
+          {hintIndex >= 0 && (
+            <div className="mt-5 glass rounded-3xl p-4 mb-4 text-center">
+              <p className="text-gray-600 text-xs">
+                📌 {hintIndex + 1}位（真ん中）の{' '}
+                <strong className="text-pink-600">
+                  {items[hintIndex]?.emoji}{items[hintIndex]?.label}
+                </strong>{' '}
+                だけが全員に公開されます
+              </p>
+            </div>
+          )}
+
+          {hintIndex < 0 && isPersonRank && (
+            <div className="mt-5 glass rounded-3xl p-4 mb-4 text-center">
+              <p className="text-gray-600 text-xs">
+                📌 ヒントなし！正直にランク付けしよう
+              </p>
+            </div>
+          )}
 
           <button
             onClick={handleSubmit}

@@ -31,7 +31,6 @@ export async function GET(
     }
 
     // ── ② last_seen 更新（クライアント制御・30秒間隔）────────
-    //    ETagヒット時も含め、update_seen=1 のときだけ書く
     if (updateSeen && playerId) {
       supabase
         .from('players')
@@ -41,8 +40,6 @@ export async function GET(
     }
 
     // ── ③ ETag変更検知 ───────────────────────────────────────
-    //    ver が一致する場合は残りのクエリを全スキップ
-    //    WAITING_PLAYERS は player join が rooms.updated_at を更新するので問題なし
     if (ver && room.updated_at && ver === room.updated_at) {
       return NextResponse.json({ changed: false })
     }
@@ -77,32 +74,44 @@ export async function GET(
         // テーマ情報（クライアント側定数から取得）
         themeData = round.theme_id ? getTheme(round.theme_id) ?? null : null
 
-        // ランキングの公開制御:
-        //   予想フェーズ以降は current_guess_rank に基づいて段階的に公開
-        //   REVEAL_MIDDLE 以降: 4位のみ
-        //   RESULT_REVEALED rank=N: 4位 + これまでに予想された全順位
-        //   RESULT_REVEALED rank=6: 7位も自動公開（全公開）
-        const RANK_SEQUENCE = [1, 2, 3, 5, 6]
+        // ランキング公開制御
+        // 通常テーマ: hint = rank 4, 予想外順位 = rank 7
+        // 人ランキング N>=5: hint = rank 3, 予想外順位 = rank N
+        // 人ランキング N<5: hint なし, 予想外順位 = rank N
+        const isPersonRank = round.is_person_rank ?? false
+        const rankSeq: number[] = (round.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
+        const targetIds: string[] | null = round.target_player_ids as string[] | null
+        const N = isPersonRank ? (targetIds?.length ?? 0) : 7
+
+        // ヒント位置: 人ランキングN>=5なら3位、通常なら4位、人ランキングN<5はなし
+        const hintRank: number | null = isPersonRank
+          ? (N >= 5 ? 3 : null)
+          : 4
+        const lastPlaceRank = N  // 公開される最終順位
+
         const revealStates = ['REVEAL_MIDDLE', 'GUESSING_OPEN', 'GUESSING_CLOSED', 'RESULT_REVEALED', 'ROUND_SUMMARY']
 
         let maskedRanking: (string | null)[] | null = null
         if (round.ranking_json && revealStates.includes(room.state)) {
           const rawRanking = round.ranking_json as string[]
-          const revealedRanks = new Set<number>([4]) // 4位は常に公開
+          const revealedRanks = new Set<number>(hintRank ? [hintRank] : [])
           const currentGuessRank: number | null = room.current_guess_rank ?? null
 
           if (room.state === 'ROUND_SUMMARY') {
             // サマリーでは全て公開
-            for (let r = 1; r <= 7; r++) revealedRanks.add(r)
+            for (let r = 1; r <= N; r++) revealedRanks.add(r)
           } else if (currentGuessRank != null) {
-            const idx = RANK_SEQUENCE.indexOf(currentGuessRank)
+            const idx = rankSeq.indexOf(currentGuessRank)
             if (room.state === 'RESULT_REVEALED') {
               // 現在のランクまで全て公開
-              for (let i = 0; i <= idx; i++) revealedRanks.add(RANK_SEQUENCE[i])
-              if (currentGuessRank === 6) revealedRanks.add(7)
+              for (let i = 0; i <= idx; i++) revealedRanks.add(rankSeq[i])
+              // 最後の予想順位に達したら最下位も自動公開
+              if (currentGuessRank === rankSeq[rankSeq.length - 1]) {
+                revealedRanks.add(lastPlaceRank)
+              }
             } else {
               // GUESSING_OPEN/CLOSED: 現在のランクより前のものだけ公開
-              for (let i = 0; i < idx; i++) revealedRanks.add(RANK_SEQUENCE[i])
+              for (let i = 0; i < idx; i++) revealedRanks.add(rankSeq[i])
             }
           }
 
@@ -117,6 +126,9 @@ export async function GET(
           asker_player_id: round.asker_player_id,
           ranking_json: maskedRanking,
           middle_revealed_value: round.middle_revealed_value,
+          is_person_rank: isPersonRank,
+          target_player_ids: targetIds,
+          rank_sequence: rankSeq,
         }
 
         // 予想数を取得（現在の順位のみ）

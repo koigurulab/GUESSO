@@ -18,8 +18,24 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const asker = players.find(p => p.id === room.asker_player_id)
   const ranking = round?.ranking_json
+  const isPersonRank = round?.is_person_rank ?? false
+  const rankSeq = round?.rank_sequence ?? [1, 2, 3, 5, 6]
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // ヒント位置インデックス: 人ランキングN>=5なら2(3位), 通常なら3(4位)
+  const N = isPersonRank ? (round?.target_player_ids?.length ?? 0) : 7
+  const hintIndex = isPersonRank ? (N >= 5 ? 2 : -1) : 3
+
+  // IDからラベル情報を取得
+  const getInfo = (id: string): { emoji?: string; label: string } => {
+    if (isPersonRank) {
+      const p = players.find(pl => pl.id === id)
+      return { label: p?.name ?? id }
+    }
+    const item = theme ? getThemeItem(theme.id, id) : null
+    return { emoji: item?.emoji, label: item?.label ?? id }
+  }
 
   const nonAskerRoundScores = (round_scores ?? [])
     .filter(s => s.player_id !== room.asker_player_id)
@@ -35,6 +51,9 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const sortedScores = [...(scores ?? [])].sort((a, b) => b.total - a.total)
   const maxTotal = Math.max(...sortedScores.map(s => s.total), 1)
 
+  // 今ラウンドの最大正解数（rank_sequenceの長さ）
+  const maxRoundScore = rankSeq.length
+
   const buildShareText = () => {
     const winner = topScorers[0]
       ? players.find(p => p.id === topScorers[0].player_id)?.name
@@ -49,8 +68,8 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
 
     return [
       winner
-        ? `🏆 ${winner}が${asker?.name}の価値観を一番わかってた！`
-        : `🎮 GUESSOで${asker?.name}の価値観を予想したよ！`,
+        ? `🏆 ${winner}が${asker?.name}の${isPersonRank ? 'ランキング' : '価値観'}を一番わかってた！`
+        : `🎮 GUESSOで${asker?.name}の${isPersonRank ? 'ランキング' : '価値観'}を予想したよ！`,
       `テーマ: ${theme?.emoji ?? ''} ${theme?.title ?? ''}`,
       '',
       scoreText,
@@ -68,18 +87,15 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
     const url = 'https://guesso-app.vercel.app'
 
     try {
-      // ── 画像キャプチャを試みる ────────────────────────────
       const cardEl = document.getElementById('share-card')
       if (cardEl && typeof navigator !== 'undefined' && navigator.share) {
         try {
-          // html2canvas を動的インポート（SSR回避）
           const html2canvas = (await import('html2canvas')).default
           const canvas = await html2canvas(cardEl, {
             backgroundColor: '#0f1a3a',
-            scale: 2,           // 高解像度
+            scale: 2,
             useCORS: true,
             logging: false,
-            // iOSでスクロール位置がずれないよう固定
             scrollX: 0,
             scrollY: -window.scrollY,
           })
@@ -90,7 +106,6 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
 
           if (blob) {
             const file = new File([blob], 'guesso-result.png', { type: 'image/png' })
-            // ファイル共有に対応しているか確認
             if (navigator.canShare?.({ files: [file] })) {
               await navigator.share({ files: [file], text, url })
               return
@@ -101,11 +116,9 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         }
       }
 
-      // ── フォールバック: テキストのみシェア ────────────────
       if (navigator.share) {
         try { await navigator.share({ title: 'GUESSO', text, url }) } catch { /* キャンセル */ }
       } else {
-        // Web Share API 非対応ブラウザ → クリップボードにコピー
         await navigator.clipboard.writeText(text)
         setCopied(true)
         setTimeout(() => setCopied(false), 2500)
@@ -139,17 +152,16 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         </div>
 
         {/* 全ランキング */}
-        {ranking && theme && (
+        {ranking && (
           <div className="px-4 py-3 border-b border-white/10">
             <p className="text-white/30 text-xs mb-2">正解ランキング</p>
             <div className="space-y-1.5">
-              {ranking.map((itemId, idx) => {
-                if (!itemId) return null
-                const item = getThemeItem(theme.id, itemId)
-                if (!item) return null
+              {ranking.map((id, idx) => {
+                if (!id) return null
+                const info = getInfo(id)
                 const rank = idx + 1
                 const isTop = rank === 1
-                const isHint = idx === 3
+                const isHint = idx === hintIndex && hintIndex >= 0
                 return (
                   <div key={idx} className={`flex items-center gap-2 rounded-xl px-3 py-1.5
                     ${isTop ? 'bg-yellow-400/15 border border-yellow-400/30' :
@@ -159,9 +171,13 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                     <span className="text-sm font-black w-6 text-center text-white/60">
                       {RANK_MEDAL[rank] ?? rank}
                     </span>
-                    <span className="text-lg">{item.emoji}</span>
+                    {info.emoji ? (
+                      <span className="text-lg">{info.emoji}</span>
+                    ) : (
+                      <span className="text-lg">{isPersonRank ? '🧑' : ''}</span>
+                    )}
                     <span className={`text-sm font-semibold flex-1 ${isTop ? 'text-yellow-300' : 'text-white/80'}`}>
-                      {item.label}
+                      {info.label}
                     </span>
                     {isHint && <span className="text-xs text-pink-400 opacity-60">ヒント</span>}
                   </div>
@@ -216,7 +232,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                   <p className="font-black text-yellow-700">{p?.name}</p>
                   <p className="text-gray-600 text-sm">
                     {asker?.name}の<span className="text-yellow-600 font-bold">一番の理解者</span>！
-                    <span className="text-gray-400 ml-1">({s.correct}/{5}点)</span>
+                    <span className="text-gray-400 ml-1">({s.correct}/{maxRoundScore}点)</span>
                   </p>
                 </div>
               </div>
@@ -233,7 +249,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                   <p className="text-gray-600 text-sm">
                     {asker?.name}と
                     <span className="font-semibold text-gray-700">もっと仲良くなろう</span>！
-                    <span className="text-gray-400 ml-1">({s.correct}/{5}点)</span>
+                    <span className="text-gray-400 ml-1">({s.correct}/{maxRoundScore}点)</span>
                   </p>
                 </div>
               </div>
@@ -244,7 +260,6 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
 
       {/* ===== ボタン ===== */}
       <div className="space-y-3 mt-auto">
-        {/* コピー完了トースト */}
         {copied && (
           <div className="text-center text-sm font-bold text-emerald-600 animate-fade-in">
             ✅ テキストをコピーしました

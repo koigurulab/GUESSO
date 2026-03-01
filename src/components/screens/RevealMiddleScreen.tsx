@@ -13,51 +13,80 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
   const { room, players, theme, round } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const asker = players.find(p => p.id === room.asker_player_id)
-  const middleItem = theme && round?.middle_revealed_value
-    ? getThemeItem(theme.id, round.middle_revealed_value)
-    : null
+  const isPersonRank = round?.is_person_rank ?? false
+
+  // ヒント位置: 人ランキング=3位, 通常=4位
+  const hintRank = isPersonRank ? 3 : 4
+  const middleValue = round?.middle_revealed_value ?? null
+
+  // 公開されたアイテムまたはプレイヤーの情報
+  const middleLabel: { emoji?: string; name: string } | null = (() => {
+    if (!middleValue) return null
+    if (isPersonRank) {
+      const p = players.find(pl => pl.id === middleValue)
+      return p ? { name: p.name } : null
+    }
+    const item = theme ? getThemeItem(theme.id, middleValue) : null
+    return item ? { emoji: item.emoji, name: item.label } : null
+  })()
+
+  // 残りの選択肢（ヒント以外）
+  const remaining = (() => {
+    if (isPersonRank && round?.target_player_ids) {
+      return round.target_player_ids
+        .filter(id => id !== middleValue)
+        .map(id => {
+          const p = players.find(pl => pl.id === id)
+          return p ? { id: p.id, emoji: '', label: p.name } : null
+        })
+        .filter(Boolean) as Array<{ id: string; emoji: string; label: string }>
+    }
+    return (theme?.items ?? []).filter(i => i.id !== middleValue)
+  })()
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="text-center mb-8 animate-fade-in">
         <p className="text-gray-500 text-xs mb-1">ラウンド {room.current_round} · {theme?.title} {theme?.emoji}</p>
-        <h2 className="text-2xl font-black text-gray-900">4位が公開！</h2>
+        <h2 className="text-2xl font-black text-gray-900">{hintRank}位が公開！</h2>
         <p className="text-gray-600 text-sm mt-1">
           <span className="text-yellow-600 font-bold">{asker?.name}</span> さんのランキング
         </p>
       </div>
 
-      {/* 4位の公開 */}
-      {middleItem && (
+      {/* ヒント位置の公開 */}
+      {middleLabel && (
         <div className="animate-bounce-in mb-8">
-          <p className="text-center text-gray-500 text-sm mb-3">4位（真ん中）は...</p>
+          <p className="text-center text-gray-500 text-sm mb-3">{hintRank}位（真ん中）は...</p>
           <div className="glass-strong rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
-            <div className="text-8xl mb-3 animate-pop">{middleItem.emoji}</div>
-            <p className="text-3xl font-black text-gray-900">{middleItem.label}</p>
+            {middleLabel.emoji ? (
+              <div className="text-8xl mb-3 animate-pop">{middleLabel.emoji}</div>
+            ) : (
+              <div className="text-8xl mb-3 animate-pop">🧑</div>
+            )}
+            <p className="text-3xl font-black text-gray-900">{middleLabel.name}</p>
             <div className="mt-3 inline-block bg-pink-100 text-pink-700 text-sm px-3 py-1 rounded-full font-bold">
-              4位
+              {hintRank}位
             </div>
           </div>
         </div>
       )}
 
-      {/* 残りのアイテム */}
-      {theme && (
+      {/* 残りの選択肢 */}
+      {remaining.length > 0 && (
         <div className="glass rounded-3xl p-4 mb-6 w-full max-w-sm animate-fade-in">
           <div className="flex flex-wrap gap-2 justify-center">
-            {theme.items
-              .filter(i => i.id !== round?.middle_revealed_value)
-              .map(item => (
-                <span key={item.id} className="glass rounded-xl px-3 py-2 text-sm text-gray-700">
-                  {item.emoji} {item.label}
-                </span>
-              ))}
+            {remaining.map(item => (
+              <span key={item.id} className="glass rounded-xl px-3 py-2 text-sm text-gray-700">
+                {item.emoji} {item.label}
+              </span>
+            ))}
           </div>
         </div>
       )}
 
       <p className="text-gray-500 text-sm text-center mb-4">
-        1位は何だと思う？
+        1位は{isPersonRank ? '誰' : '何'}だと思う？
       </p>
 
       {isHost ? (

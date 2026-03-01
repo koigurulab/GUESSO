@@ -5,8 +5,9 @@ export type RoomState =
   | 'WAITING_PLAYERS'   // ロビー待機
   | 'SELECT_THEME'      // ホストがテーマ選択
   | 'SELECT_ASKER'      // ホストが出題者指名
+  | 'SELECT_TARGETS'    // 出題者が対象プレイヤーを選択（人ランキングのみ）
   | 'ASKER_RANKING'     // 出題者がランキング入力
-  | 'REVEAL_MIDDLE'     // 4位が公開された状態（ホスト待ち）
+  | 'REVEAL_MIDDLE'     // ヒント位置が公開された状態（ホスト待ち）
   | 'GUESSING_OPEN'     // 全員が予想中
   | 'GUESSING_CLOSED'   // 締切（ホストが結果公開待ち）
   | 'RESULT_REVEALED'   // 順位ごとの結果公開
@@ -25,9 +26,10 @@ export interface Theme {
   id: string
   title: string
   emoji: string
-  category: 'love' | 'life' | 'light' | 'custom' | 'fetish'
+  category: 'love' | 'life' | 'light' | 'custom' | 'fetish' | 'person-rank'
   items: ThemeItem[]
   is_free: boolean
+  is_person_rank?: boolean  // 人ランキングモードフラグ
 }
 
 export interface Room {
@@ -90,8 +92,11 @@ export interface RoomStateResponse {
     round_no: number
     theme_id: string | null
     asker_player_id: string | null
-    ranking_json: (string | null)[] | null  // null=非公開, string=公開済みitem_id
+    ranking_json: (string | null)[] | null  // null=非公開, string=公開済みitem_id or player_id
     middle_revealed_value: string | null
+    is_person_rank: boolean
+    target_player_ids: string[] | null     // 人ランキング: 対象プレイヤーID一覧
+    rank_sequence: number[] | null         // 予想する順位配列 e.g.[1,2,4]
   } | null
   guess_count: number
   my_guess: string | null
@@ -109,6 +114,7 @@ export type GameAction =
   | 'start-game'
   | 'select-theme'
   | 'select-asker'
+  | 'select-targets'
   | 'submit-ranking'
   | 'open-guessing'
   | 'submit-guess'
@@ -131,4 +137,6 @@ export interface ActionRequest {
   kick_player_id?: string
   // LINE verification
   line_verify_code?: string
+  // 人ランキング: 対象プレイヤーID一覧
+  target_player_ids?: string[]
 }

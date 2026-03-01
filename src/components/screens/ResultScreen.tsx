@@ -16,17 +16,21 @@ function calcMostGuessed(guesses: Array<{ guess_top1: string }> | null) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
 }
 
-const RANK_SEQUENCE = [1, 2, 3, 5, 6]
-
 export default function ResultScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, theme, round, guesses, my_guess } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const asker = players.find(p => p.id === round?.asker_player_id)
   const ranking = round?.ranking_json
   const currentRank = room.current_guess_rank ?? 1
+  const isPersonRank = round?.is_person_rank ?? false
 
-  const currentRankIdx = RANK_SEQUENCE.indexOf(currentRank)
-  const nextRank = currentRankIdx < RANK_SEQUENCE.length - 1 ? RANK_SEQUENCE[currentRankIdx + 1] : null
+  // 人ランキング対象プレイヤーID一覧
+  const targetPlayerIds = round?.target_player_ids ?? null
+
+  // ランク配列（DBから取得 or 通常テーマのデフォルト）
+  const rankSeq = round?.rank_sequence ?? [1, 2, 3, 5, 6]
+  const currentRankIdx = rankSeq.indexOf(currentRank)
+  const nextRank = currentRankIdx < rankSeq.length - 1 ? rankSeq[currentRankIdx + 1] : null
   const isFinalRank = nextRank === null
 
   const correctAnswer = ranking?.[currentRank - 1] ?? null
@@ -34,7 +38,21 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
 
   const mostGuessed = calcMostGuessed(guesses)
 
-  if (!ranking || !theme) {
+  // IDからラベル情報を取得（人ランキングか通常かで分岐）
+  const getInfo = (id: string): { emoji?: string; label: string } => {
+    if (isPersonRank) {
+      const p = players.find(pl => pl.id === id)
+      return { label: p?.name ?? id }
+    }
+    const item = theme ? getThemeItem(theme.id, id) : null
+    return { emoji: item?.emoji, label: item?.label ?? id }
+  }
+
+  // ヒント位置のインデックス: 人ランキングN>=5なら2(3位), 通常なら3(4位), 人ランキングN<5はなし
+  const N = isPersonRank ? (targetPlayerIds?.length ?? 0) : 7
+  const hintIndex = isPersonRank ? (N >= 5 ? 2 : -1) : 3
+
+  if (!ranking) {
     return <div className="min-h-dvh flex items-center justify-center">
       <p className="text-gray-400">読み込み中...</p>
     </div>
@@ -48,19 +66,19 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
           {isFinalRank ? '全ランキング公開！' : `${currentRank}位の結果！`}
         </h2>
         <p className="text-gray-600 text-sm mt-1">
-          {asker?.name} さんの {theme.title} {theme.emoji} ランキング
+          {asker?.name} さんの {theme?.title} {theme?.emoji} ランキング
         </p>
       </div>
 
       {/* ランキング */}
       <div className="space-y-2 mb-5 animate-slide-up">
-        {ranking.map((itemId, idx) => {
+        {ranking.map((id, idx) => {
           const rank = idx + 1
-          const isRevealed = itemId !== null
-          const item = (isRevealed && itemId) ? getThemeItem(theme.id, itemId) : null
+          const isRevealed = id !== null
+          const info = (isRevealed && id) ? getInfo(id) : null
           const isCurrentRank = rank === currentRank
           const isTop = rank === 1
-          const isMidHint = idx === 3
+          const isHint = idx === hintIndex && hintIndex >= 0
 
           return (
             <div
@@ -69,7 +87,7 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
                 flex items-center gap-3 rounded-2xl px-4 py-3
                 ${isCurrentRank ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300' :
                   isTop && isRevealed ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200' :
-                  isMidHint && isRevealed ? 'glass ring-1 ring-pink-300' :
+                  isHint && isRevealed ? 'glass ring-1 ring-pink-300' :
                   isRevealed ? 'glass' :
                   'glass opacity-40'}
                 animate-bounce-in
@@ -79,11 +97,15 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
               <span className="text-xl font-black w-8 text-center">
                 {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}
               </span>
-              <span className="text-3xl">{isRevealed ? item?.emoji : '❓'}</span>
+              {info?.emoji ? (
+                <span className="text-3xl">{info.emoji}</span>
+              ) : (
+                <span className="text-3xl">{isRevealed ? (isPersonRank ? '🧑' : '❓') : '❓'}</span>
+              )}
               <span className={`font-bold flex-1 text-lg ${isCurrentRank ? 'text-yellow-700' : !isRevealed ? 'text-gray-400' : 'text-gray-900'}`}>
-                {isRevealed ? item?.label : '???'}
+                {isRevealed ? info?.label : '???'}
               </span>
-              {isMidHint && isRevealed && <span className="text-xs text-pink-600 glass px-2 py-1 rounded-lg font-bold">公開済み</span>}
+              {isHint && isRevealed && <span className="text-xs text-pink-600 glass px-2 py-1 rounded-lg font-bold">公開済み</span>}
               {isCurrentRank && <span className="text-yellow-500">★</span>}
             </div>
           )
@@ -107,8 +129,10 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
             <>
               <p className="text-xl font-bold text-gray-600">残念... 不正解</p>
               <p className="text-gray-500 text-sm">
-                あなたの予想: {getThemeItem(theme.id, my_guess)?.emoji}{' '}
-                {getThemeItem(theme.id, my_guess)?.label}
+                あなたの予想: {(() => {
+                  const info = getInfo(my_guess)
+                  return `${info.emoji ?? (isPersonRank ? '🧑' : '')} ${info.label}`
+                })()}
               </p>
             </>
           )}
@@ -122,14 +146,14 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
           <div className="space-y-2">
             {guesses.map(g => {
               const p = players.find(pl => pl.id === g.player_id)
-              const item = getThemeItem(theme.id, g.guess_top1)
+              const info = getInfo(g.guess_top1)
               const correct = g.guess_top1 === correctAnswer
               return (
                 <div key={g.player_id} className="flex items-center gap-3">
                   <span className="text-xl">{correct ? '👑' : '😅'}</span>
                   <span className="font-semibold flex-1 text-sm text-gray-900">{p?.name}</span>
                   <span className={`text-sm ${correct ? 'text-yellow-600 font-bold' : 'text-gray-500'}`}>
-                    {item?.emoji} {item?.label}
+                    {info.emoji} {info.label}
                   </span>
                 </div>
               )
@@ -145,8 +169,10 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
           <div>
             <p className="text-gray-500 text-xs">最多予想の{currentRank}位</p>
             <p className="font-bold text-gray-900">
-              {getThemeItem(theme.id, mostGuessed[0])?.emoji}{' '}
-              {getThemeItem(theme.id, mostGuessed[0])?.label}
+              {(() => {
+                const info = getInfo(mostGuessed[0])
+                return `${info.emoji ?? (isPersonRank ? '🧑' : '')} ${info.label}`
+              })()}
               <span className="text-gray-500 text-xs ml-2">({mostGuessed[1]}票)</span>
             </p>
           </div>

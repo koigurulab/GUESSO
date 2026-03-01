@@ -1,26 +1,29 @@
 'use client'
 
-import { useState } from 'react'
-import { FREE_THEMES, FETISH_THEMES } from '@/lib/themes'
+import { useState, useEffect } from 'react'
+import { FREE_THEMES, FETISH_THEMES, PERSON_RANK_THEMES } from '@/lib/themes'
+import { hasPurchased } from '@/lib/purchase'
 import type { RoomStateResponse } from '@/lib/types'
 
 interface Props {
   gameState: RoomStateResponse
   playerId: string
+  roomCode: string
   onAction: (action: string, params?: Record<string, unknown>) => Promise<boolean>
 }
 
 const categoryColor: Record<string, string> = {
-  love:   'from-pink-500 to-rose-600',
-  life:   'from-blue-500 to-indigo-600',
-  light:  'from-amber-500 to-orange-600',
-  fetish: 'from-purple-500 to-violet-600',
+  love:        'from-pink-500 to-rose-600',
+  life:        'from-blue-500 to-indigo-600',
+  light:       'from-amber-500 to-orange-600',
+  fetish:      'from-purple-500 to-violet-600',
+  'person-rank': 'from-violet-500 to-fuchsia-600',
 }
 
 // LINEアカウント追加リンク（@117ppmlv）
 const LINE_ADD_URL = 'https://line.me/R/ti/p/%40117ppmlv'
 
-export default function ThemeSelectScreen({ gameState, playerId, onAction }: Props) {
+export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAction }: Props) {
   const { room, players } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const lineVerified = room.line_verified
@@ -28,6 +31,38 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
 
   // フェチカードの展開状態
   const [fetishExpanded, setFetishExpanded] = useState(false)
+  // 人ランキングパックの展開状態
+  const [personRankExpanded, setPersonRankExpanded] = useState(false)
+  // 購入済み状態（localStorageから読む）
+  const [purchased, setPurchased] = useState(false)
+  // Stripe決済中
+  const [purchasing, setPurchasing] = useState(false)
+
+  useEffect(() => {
+    setPurchased(hasPurchased())
+  }, [])
+
+  const handleBuyPersonRank = async () => {
+    if (purchasing) return
+    setPurchasing(true)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_code: roomCode, player_id: playerId }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert(data.error ?? '決済ページを開けませんでした')
+        setPurchasing(false)
+      }
+    } catch {
+      alert('通信エラーが発生しました')
+      setPurchasing(false)
+    }
+  }
 
   return (
     <div className="min-h-dvh flex flex-col px-4 py-8">
@@ -37,6 +72,7 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
       </div>
 
       <div className="space-y-3 flex-1 animate-slide-up">
+
         {/* 通常テーマ（無料） */}
         {FREE_THEMES.map(theme => (
           <button
@@ -72,7 +108,7 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
             フェチテーマ（LINE認証が必要 / 認証済みで選択可）
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <div className="glass rounded-3xl overflow-hidden">
-          {/* ヘッダー行 — ホスト・非ホスト問わずタップで展開 */}
+          {/* ヘッダー行 */}
           <button
             onClick={() => setFetishExpanded(prev => !prev)}
             className="w-full p-5 text-left transition-all active:scale-95 cursor-pointer"
@@ -112,7 +148,6 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
               {/* ── 未認証：LINE誘導パネル ── */}
               {!lineVerified && (
                 <>
-                  {/* テーマ内容のティーズ */}
                   <div className="space-y-2">
                     {FETISH_THEMES.map(theme => (
                       <div key={theme.id} className="bg-white/30 rounded-2xl px-4 py-3">
@@ -193,6 +228,110 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
             </div>
           )}
         </div>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            人ランキングパック（Stripe課金）
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="glass rounded-3xl overflow-hidden">
+          {/* ヘッダー行 */}
+          <button
+            onClick={() => setPersonRankExpanded(prev => !prev)}
+            className="w-full p-5 text-left transition-all active:scale-95 cursor-pointer"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${categoryColor['person-rank']} flex items-center justify-center text-3xl`}>
+                {purchased ? '👥' : '🔒'}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-black text-lg text-gray-900">👥 人ランキング</p>
+                  {!purchased && (
+                    <span className="text-xs bg-fuchsia-100 text-fuchsia-700 font-bold px-2 py-0.5 rounded-full">
+                      ¥480で解放！
+                    </span>
+                  )}
+                  {purchased && (
+                    <span className="text-xs bg-violet-100 text-violet-700 font-bold px-2 py-0.5 rounded-full">
+                      👑 解放済み
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  恋人・モテ・旅行...仲間をランク付け！
+                </p>
+              </div>
+              <span className="text-gray-400 text-lg">{personRankExpanded ? '∨' : '›'}</span>
+            </div>
+          </button>
+
+          {/* 展開パネル */}
+          {personRankExpanded && (
+            <div className="border-t border-white/30 px-5 pb-5 pt-4 space-y-3">
+
+              {/* テーマ一覧 */}
+              <div className="space-y-2">
+                {PERSON_RANK_THEMES.map(theme => (
+                  <div key={theme.id} className="bg-white/30 rounded-2xl px-4 py-3">
+                    <p className="text-sm font-bold text-gray-700">{theme.emoji} {theme.title}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* 未購入: 購入ボタン（ホストのみ） */}
+              {!purchased && isHost && (
+                <button
+                  onClick={handleBuyPersonRank}
+                  disabled={purchasing}
+                  className="w-full py-3 rounded-2xl font-black text-white text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-fuchsia-600 active:scale-95 transition-all disabled:opacity-60"
+                >
+                  {purchasing ? (
+                    <>
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full" />
+                      決済ページを開いています...
+                    </>
+                  ) : (
+                    '¥480 で解放する（1回払い・この端末ずっと使える）'
+                  )}
+                </button>
+              )}
+
+              {/* 未購入: 非ホスト向けメッセージ */}
+              {!purchased && !isHost && (
+                <p className="text-sm text-gray-500 text-center py-2">
+                  ¥480で解放できます。ホストに伝えてみよう！
+                </p>
+              )}
+
+              {/* 購入済み + ホスト: テーマ選択ボタン */}
+              {purchased && isHost && (
+                <>
+                  <p className="text-sm text-gray-600 text-center font-bold">テーマを選んでください</p>
+                  {PERSON_RANK_THEMES.map(theme => (
+                    <button
+                      key={theme.id}
+                      onClick={() => onAction('select-theme', { theme_id: theme.id })}
+                      className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl p-4 text-left transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{theme.emoji}</span>
+                        <p className="font-bold text-gray-900 text-sm flex-1">{theme.title}</p>
+                        <span className="text-gray-400">›</span>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {/* 購入済み + 非ホスト */}
+              {purchased && !isHost && (
+                <p className="text-sm text-gray-500 text-center py-2">
+                  👑 解放済み！ホストがテーマを選んでいます
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {!isHost && (

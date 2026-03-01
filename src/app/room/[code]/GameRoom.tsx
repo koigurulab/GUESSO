@@ -14,6 +14,7 @@ import GuessingScreen from '@/components/screens/GuessingScreen'
 import GuessingClosedScreen from '@/components/screens/GuessingClosedScreen'
 import ResultScreen from '@/components/screens/ResultScreen'
 import RoundSummaryScreen from '@/components/screens/RoundSummaryScreen'
+import SelectTargetsScreen from '@/components/screens/SelectTargetsScreen'
 
 // ── ポーリング間隔（状態ごとに調整）──────────────────────────
 const POLL_INTERVALS: Partial<Record<string, number>> = {
@@ -364,6 +365,7 @@ export default function GameRoom({ roomCode }: Props) {
           case 'WAITING_PLAYERS':   return <LobbyScreen {...commonProps} />
           case 'SELECT_THEME':      return <ThemeSelectScreen {...commonProps} />
           case 'SELECT_ASKER':      return <ChooseAskerScreen {...commonProps} />
+          case 'SELECT_TARGETS':    return <SelectTargetsScreen {...commonProps} />
           case 'ASKER_RANKING':     return <RankInputScreen {...commonProps} />
           case 'REVEAL_MIDDLE':     return <RevealMiddleScreen {...commonProps} />
           case 'GUESSING_OPEN':     return <GuessingScreen {...commonProps} />
