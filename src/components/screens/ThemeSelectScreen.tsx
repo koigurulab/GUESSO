@@ -17,19 +17,17 @@ const categoryColor: Record<string, string> = {
   fetish: 'from-purple-500 to-violet-600',
 }
 
+// LINEアカウント追加リンク（@117ppmlv）
+const LINE_ADD_URL = 'https://line.me/R/ti/p/%40117ppmlv'
+
 export default function ThemeSelectScreen({ gameState, playerId, onAction }: Props) {
   const { room, players } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const lineVerified = room.line_verified
+  const verifyCode = room.line_verify_code
 
-  // フェチテーマのサブ選択（女性/男性）を表示するかどうか
-  const [showFetishSub, setShowFetishSub] = useState(false)
-
-  const handleFetishClick = () => {
-    if (!isHost) return
-    if (!lineVerified) return  // 認証されていなければ何もしない
-    setShowFetishSub(prev => !prev)
-  }
+  // フェチカードの展開状態
+  const [fetishExpanded, setFetishExpanded] = useState(false)
 
   return (
     <div className="min-h-dvh flex flex-col px-4 py-8">
@@ -70,80 +68,128 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
           </button>
         ))}
 
-        {/* フェチテーマ（LINE認証が必要） */}
-        <div className={`glass rounded-3xl overflow-hidden transition-all ${isHost && lineVerified ? 'cursor-pointer hover:glass-strong' : ''}`}>
-          {/* フェチテーマのメインカード */}
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            フェチテーマ（LINE認証が必要 / 認証済みで選択可）
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="glass rounded-3xl overflow-hidden">
+          {/* ヘッダー行 — ホスト・非ホスト問わずタップで展開 */}
           <button
-            onClick={handleFetishClick}
-            disabled={!isHost || !lineVerified}
-            className="w-full p-5 text-left transition-all active:scale-95 disabled:cursor-default"
+            onClick={() => setFetishExpanded(prev => !prev)}
+            className="w-full p-5 text-left transition-all active:scale-95 cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${categoryColor.fetish} flex items-center justify-center text-3xl`}>
                 {lineVerified ? '🔥' : '🔒'}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-black text-lg text-gray-900">理解できるフェチ</p>
                   {!lineVerified && (
                     <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
-                      LINE認証で解放
+                      LINE追加で解放！
                     </span>
                   )}
                   {lineVerified && (
                     <span className="text-xs bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">
-                      解放済み
+                      💜 解放済み
                     </span>
                   )}
                 </div>
-
-                {!lineVerified ? (
-                  <p className="text-xs text-gray-400 mt-1">
-                    ロビー画面の確認コードをLINEに送ると解放されます
-                  </p>
-                ) : (
-                  <div className="flex gap-1.5 mt-1 flex-wrap">
-                    {FETISH_THEMES.flatMap(t => t.items).slice(0, 5).map(item => (
-                      <span key={`${item.id}-preview`} className="text-xs text-gray-500">
-                        {item.emoji}{item.label}
-                      </span>
-                    ))}
-                    <span className="text-xs text-gray-400">…</span>
-                  </div>
-                )}
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {lineVerified
+                    ? 'うなじ・鎖骨・わき・手・血管・肩幅...'
+                    : 'タップして詳細を確認'}
+                </p>
               </div>
-              {isHost && lineVerified && (
-                <span className="text-gray-400 text-lg">{showFetishSub ? '∨' : '›'}</span>
-              )}
+              <span className="text-gray-400 text-lg">{fetishExpanded ? '∨' : '›'}</span>
             </div>
           </button>
 
-          {/* サブ選択（女性/男性） — LINE認証済み + ホストのみ表示 */}
-          {lineVerified && showFetishSub && isHost && (
-            <div className="border-t border-white/30 px-5 pb-5 pt-3 space-y-2">
-              <p className="text-xs text-gray-500 mb-2 text-center">対象を選んでください</p>
-              {FETISH_THEMES.map(theme => (
-                <button
-                  key={theme.id}
-                  onClick={() => onAction('select-theme', { theme_id: theme.id })}
-                  className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl p-4 text-left transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{theme.emoji}</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">{theme.title}</p>
-                      <div className="flex gap-1.5 mt-1 flex-wrap">
-                        {theme.items.map(item => (
-                          <span key={item.id} className="text-xs text-gray-500">
-                            {item.emoji}{item.label}
-                          </span>
-                        ))}
+          {/* 展開パネル */}
+          {fetishExpanded && (
+            <div className="border-t border-white/30 px-5 pb-5 pt-4 space-y-4">
+
+              {/* ── 未認証：LINE誘導パネル ── */}
+              {!lineVerified && (
+                <>
+                  {/* テーマ内容のティーズ */}
+                  <div className="space-y-2">
+                    {FETISH_THEMES.map(theme => (
+                      <div key={theme.id} className="bg-white/30 rounded-2xl px-4 py-3">
+                        <p className="text-sm font-bold text-gray-700 mb-1">{theme.emoji} {theme.title}</p>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {theme.items.map(item => (
+                            <span key={item.id} className="text-xs text-gray-600">
+                              {item.emoji}{item.label}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-gray-400">›</span>
+                    ))}
                   </div>
-                </button>
-              ))}
+
+                  {/* LINE追加ボタン */}
+                  <a
+                    href={LINE_ADD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-white text-sm"
+                    style={{ backgroundColor: '#06C755' }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                      <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                    </svg>
+                    LINE公式アカウントを友達追加する
+                  </a>
+
+                  {/* 確認コード */}
+                  {verifyCode && (
+                    <div className="bg-white/50 rounded-2xl p-4 text-center">
+                      <p className="text-xs text-gray-500 mb-1">② 追加したら、このコードをLINEに送信</p>
+                      <p className="text-4xl font-black tracking-widest text-purple-700 my-2">
+                        {verifyCode}
+                      </p>
+                      <p className="text-xs text-gray-400">送信後、このページが自動で更新されます</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ── 認証済み + ホスト：女性/男性サブ選択 ── */}
+              {lineVerified && isHost && (
+                <>
+                  <p className="text-sm text-gray-600 text-center font-bold">対象を選んでください</p>
+                  {FETISH_THEMES.map(theme => (
+                    <button
+                      key={theme.id}
+                      onClick={() => onAction('select-theme', { theme_id: theme.id })}
+                      className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl p-4 text-left transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{theme.emoji}</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900 text-sm">{theme.title}</p>
+                          <div className="flex gap-1.5 mt-1 flex-wrap">
+                            {theme.items.map(item => (
+                              <span key={item.id} className="text-xs text-gray-500">
+                                {item.emoji}{item.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-gray-400">›</span>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {/* ── 認証済み + 非ホスト ── */}
+              {lineVerified && !isHost && (
+                <p className="text-sm text-gray-500 text-center py-2">
+                  💜 解放済み！ホストがテーマを選んでいます
+                </p>
+              )}
             </div>
           )}
         </div>
