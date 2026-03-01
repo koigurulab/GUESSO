@@ -77,7 +77,10 @@ export default function SelectTargetsScreen({ gameState, playerId, onAction }: P
         <div className="text-3xl mb-1">{theme?.emoji}</div>
         <h2 className="text-xl font-black gradient-text">{theme?.title}</h2>
         <p className="text-gray-600 text-sm mt-2">
-          ランク付けする人を <strong>3〜7人</strong> 選んでね
+          誰を選択肢にする？<strong>3〜7人</strong>選んでね
+        </p>
+        <p className="text-gray-500 text-xs mt-1">
+          選んだ人の中で正直に答えてもらうよ👀
         </p>
       </div>
 
