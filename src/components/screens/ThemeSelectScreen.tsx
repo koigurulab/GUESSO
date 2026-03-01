@@ -33,10 +33,20 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
   const [fetishExpanded, setFetishExpanded] = useState(false)
   // 人ランキングパックの展開状態
   const [personRankExpanded, setPersonRankExpanded] = useState(false)
+  // 人ランキング内ジャンルの展開状態
+  const [expandedGenres, setExpandedGenres] = useState<Set<string>>(new Set())
   // 購入済み状態（localStorageから読む）
   const [purchased, setPurchased] = useState(false)
   // Stripe決済中
   const [purchasing, setPurchasing] = useState(false)
+
+  const toggleGenre = (genreId: string) => {
+    setExpandedGenres(prev => {
+      const next = new Set(prev)
+      if (next.has(genreId)) { next.delete(genreId) } else { next.add(genreId) }
+      return next
+    })
+  }
 
   useEffect(() => {
     setPurchased(hasPurchased())
@@ -244,7 +254,7 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-black text-lg text-gray-900">👥 人ランキング</p>
+                  <p className="font-black text-lg text-gray-900">🏆 この中で一番は誰？</p>
                   {!purchased && (
                     <span className="text-xs bg-fuchsia-100 text-fuchsia-700 font-bold px-2 py-0.5 rounded-full">
                       ¥480で解放！
@@ -268,26 +278,37 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
           {personRankExpanded && (
             <div className="border-t border-white/30 px-5 pb-5 pt-4 space-y-3">
 
-              {/* テーマ一覧（ジャンル別・未購入プレビュー） */}
+              {/* テーマ一覧（ジャンル別トグル・未購入プレビュー） */}
               {!purchased && (
-                <div className="space-y-3">
-                  {PERSON_RANK_GENRES.map(genre => (
-                    <div key={genre.id}>
-                      <p className="text-xs font-bold text-gray-400 mb-1.5 px-1">{genre.label}</p>
-                      <div className="space-y-1">
-                        {genre.themeIds.map(tid => {
-                          const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
-                          if (!theme) return null
-                          return (
-                            <div key={tid} className="bg-white/30 rounded-xl px-3 py-2 flex items-center gap-2">
-                              <span className="text-base">{theme.emoji}</span>
-                              <p className="text-sm font-bold text-gray-700">{theme.title}</p>
-                            </div>
-                          )
-                        })}
+                <div className="space-y-2">
+                  {PERSON_RANK_GENRES.map(genre => {
+                    const isOpen = expandedGenres.has(genre.id)
+                    return (
+                      <div key={genre.id} className="bg-white/20 rounded-2xl overflow-hidden">
+                        <button
+                          onClick={() => toggleGenre(genre.id)}
+                          className="w-full px-4 py-3 flex items-center justify-between active:scale-95 transition-all"
+                        >
+                          <span className="text-sm font-bold text-gray-600">{genre.label}</span>
+                          <span className="text-gray-400 text-sm">{isOpen ? '∨' : '›'}</span>
+                        </button>
+                        {isOpen && (
+                          <div className="px-3 pb-3 space-y-1">
+                            {genre.themeIds.map(tid => {
+                              const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
+                              if (!theme) return null
+                              return (
+                                <div key={tid} className="bg-white/30 rounded-xl px-3 py-2 flex items-center gap-2">
+                                  <span className="text-base">{theme.emoji}</span>
+                                  <p className="text-sm font-bold text-gray-700">{theme.title}</p>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
@@ -316,33 +337,44 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
                 </p>
               )}
 
-              {/* 購入済み + ホスト: ジャンル別テーマ選択ボタン */}
+              {/* 購入済み + ホスト: ジャンル別トグル＋テーマ選択ボタン */}
               {purchased && isHost && (
-                <div className="space-y-4">
-                  {PERSON_RANK_GENRES.map(genre => (
-                    <div key={genre.id}>
-                      <p className="text-xs font-bold text-gray-400 mb-1.5 px-1">{genre.label}</p>
-                      <div className="space-y-1.5">
-                        {genre.themeIds.map(tid => {
-                          const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
-                          if (!theme) return null
-                          return (
-                            <button
-                              key={tid}
-                              onClick={() => onAction('select-theme', { theme_id: tid })}
-                              className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl px-4 py-3 text-left transition-all"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-xl">{theme.emoji}</span>
-                                <p className="font-bold text-gray-900 text-sm flex-1">{theme.title}</p>
-                                <span className="text-gray-400">›</span>
-                              </div>
-                            </button>
-                          )
-                        })}
+                <div className="space-y-2">
+                  {PERSON_RANK_GENRES.map(genre => {
+                    const isOpen = expandedGenres.has(genre.id)
+                    return (
+                      <div key={genre.id} className="bg-white/20 rounded-2xl overflow-hidden">
+                        <button
+                          onClick={() => toggleGenre(genre.id)}
+                          className="w-full px-4 py-3 flex items-center justify-between active:scale-95 transition-all"
+                        >
+                          <span className="text-sm font-bold text-gray-700">{genre.label}</span>
+                          <span className="text-gray-400 text-sm">{isOpen ? '∨' : '›'}</span>
+                        </button>
+                        {isOpen && (
+                          <div className="px-3 pb-3 space-y-1.5">
+                            {genre.themeIds.map(tid => {
+                              const theme = PERSON_RANK_THEMES.find(t => t.id === tid)
+                              if (!theme) return null
+                              return (
+                                <button
+                                  key={tid}
+                                  onClick={() => onAction('select-theme', { theme_id: tid })}
+                                  className="w-full bg-white/40 hover:bg-white/60 active:scale-95 rounded-2xl px-4 py-3 text-left transition-all"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xl">{theme.emoji}</span>
+                                    <p className="font-bold text-gray-900 text-sm flex-1">{theme.title}</p>
+                                    <span className="text-gray-400">›</span>
+                                  </div>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
