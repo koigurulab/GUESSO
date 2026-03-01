@@ -99,7 +99,7 @@ CREATE INDEX idx_players_last_seen    ON players(last_seen);
 INSERT INTO themes (id, title, emoji, category, items) VALUES
 (
   'love',
-  '恋愛',
+  '異性に求めるもの',
   '💕',
   'love',
   '[
@@ -107,14 +107,14 @@ INSERT INTO themes (id, title, emoji, category, items) VALUES
     {"id":"personality", "emoji":"💝", "label":"性格"},
     {"id":"height",      "emoji":"📏", "label":"身長"},
     {"id":"income",      "emoji":"💰", "label":"収入"},
-    {"id":"values",      "emoji":"🌟", "label":"価値観"},
-    {"id":"talk",        "emoji":"💬", "label":"会話力"},
-    {"id":"life_skill",  "emoji":"🏠", "label":"生活力"}
+    {"id":"chemistry",   "emoji":"🔥", "label":"体の相性"},
+    {"id":"drinking",    "emoji":"🍻", "label":"お酒の飲み具合"},
+    {"id":"frequency",   "emoji":"📅", "label":"会える頻度"}
   ]'::jsonb
 ),
 (
   'life',
-  '人生観',
+  '人生で大事なもの',
   '🌈',
   'life',
   '[
@@ -124,7 +124,7 @@ INSERT INTO themes (id, title, emoji, category, items) VALUES
     {"id":"family",   "emoji":"👨‍👩‍👧", "label":"家族"},
     {"id":"work",     "emoji":"🏢", "label":"仕事"},
     {"id":"friends",  "emoji":"👫", "label":"友達"},
-    {"id":"fun",      "emoji":"🎮", "label":"楽しみ"}
+    {"id":"hobby",    "emoji":"🎨", "label":"趣味"}
   ]'::jsonb
 ),
 (
@@ -140,21 +140,6 @@ INSERT INTO themes (id, title, emoji, category, items) VALUES
     {"id":"shochu",    "emoji":"🫗", "label":"焼酎"},
     {"id":"lemonsour", "emoji":"🍋", "label":"レモンサワー"},
     {"id":"tequila",   "emoji":"🌵", "label":"テキーラ"}
-  ]'::jsonb
-),
-(
-  'date',
-  'デートで大事なもの',
-  '🍸',
-  'light',
-  '[
-    {"id":"vibe",       "emoji":"✨", "label":"雰囲気"},
-    {"id":"restaurant", "emoji":"🍽️", "label":"お店"},
-    {"id":"pay",        "emoji":"💸", "label":"おごり"},
-    {"id":"instam",     "emoji":"📸", "label":"映え"},
-    {"id":"transport",  "emoji":"🚗", "label":"移動"},
-    {"id":"lead",       "emoji":"🎯", "label":"リード"},
-    {"id":"ending",     "emoji":"🌙", "label":"終わり方"}
   ]'::jsonb
 );
 
