@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { getThemeItem } from '@/lib/themes'
 import type { RoomStateResponse } from '@/lib/types'
 
@@ -17,6 +18,8 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
   const asker = players.find(p => p.id === room.asker_player_id)
   const ranking = round?.ranking_json
+  const [sharing, setSharing] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const nonAskerRoundScores = (round_scores ?? [])
     .filter(s => s.player_id !== room.asker_player_id)
@@ -32,36 +35,83 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const sortedScores = [...(scores ?? [])].sort((a, b) => b.total - a.total)
   const maxTotal = Math.max(...sortedScores.map(s => s.total), 1)
 
-  const handleShare = async () => {
+  const buildShareText = () => {
+    const winner = topScorers[0]
+      ? players.find(p => p.id === topScorers[0].player_id)?.name
+      : null
     const scoreText = sortedScores
       .map((s, i) => {
         const p = players.find(pl => pl.id === s.player_id)
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '　'
-        return `${medal} ${p?.name}: ${s.total}点`
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
+        return `${medal} ${p?.name ?? '?'}: ${s.total}点`
       })
       .join('\n')
 
-    const titleText = topScorers.length > 0
-      ? `🏆 ${topScorers.map(s => players.find(p => p.id === s.player_id)?.name).join('・')}が${asker?.name}の一番の理解者！`
-      : ''
-
-    const text = [
-      `🎮 GUESSO ラウンド${room.current_round}終了！`,
-      `${asker?.name}さんの「${theme?.title}」ランキングを予想したよ`,
+    return [
+      winner
+        ? `🏆 ${winner}が${asker?.name}の価値観を一番わかってた！`
+        : `🎮 GUESSOで${asker?.name}の価値観を予想したよ！`,
+      `テーマ: ${theme?.emoji ?? ''} ${theme?.title ?? ''}`,
       '',
       scoreText,
-      titleText,
       '',
-      `#GUESSO`,
+      '▶ 一緒に遊ぶ → https://guesso-app.vercel.app',
+      '#GUESSO #価値観ゲーム',
     ].filter(Boolean).join('\n')
+  }
 
-    const url = `https://guesso-app.vercel.app`
+  const handleShare = async () => {
+    if (sharing) return
+    setSharing(true)
 
-    if (navigator.share) {
-      try { await navigator.share({ title: 'GUESSO', text, url }) } catch { /* cancelled */ }
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`)
-      alert('クリップボードにコピーしました！')
+    const text = buildShareText()
+    const url = 'https://guesso-app.vercel.app'
+
+    try {
+      // ── 画像キャプチャを試みる ────────────────────────────
+      const cardEl = document.getElementById('share-card')
+      if (cardEl && typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          // html2canvas を動的インポート（SSR回避）
+          const html2canvas = (await import('html2canvas')).default
+          const canvas = await html2canvas(cardEl, {
+            backgroundColor: '#0f1a3a',
+            scale: 2,           // 高解像度
+            useCORS: true,
+            logging: false,
+            // iOSでスクロール位置がずれないよう固定
+            scrollX: 0,
+            scrollY: -window.scrollY,
+          })
+
+          const blob = await new Promise<Blob | null>(resolve =>
+            canvas.toBlob(resolve, 'image/png')
+          )
+
+          if (blob) {
+            const file = new File([blob], 'guesso-result.png', { type: 'image/png' })
+            // ファイル共有に対応しているか確認
+            if (navigator.canShare?.({ files: [file] })) {
+              await navigator.share({ files: [file], text, url })
+              return
+            }
+          }
+        } catch (e) {
+          console.warn('[share] 画像キャプチャ失敗、テキストのみでシェア:', e)
+        }
+      }
+
+      // ── フォールバック: テキストのみシェア ────────────────
+      if (navigator.share) {
+        try { await navigator.share({ title: 'GUESSO', text, url }) } catch { /* キャンセル */ }
+      } else {
+        // Web Share API 非対応ブラウザ → クリップボードにコピー
+        await navigator.clipboard.writeText(text)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
+      }
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -194,12 +244,29 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
 
       {/* ===== ボタン ===== */}
       <div className="space-y-3 mt-auto">
+        {/* コピー完了トースト */}
+        {copied && (
+          <div className="text-center text-sm font-bold text-emerald-600 animate-fade-in">
+            ✅ テキストをコピーしました
+          </div>
+        )}
         <button
           onClick={handleShare}
-          className="btn-secondary w-full text-base py-3 flex items-center justify-center gap-2"
+          disabled={sharing}
+          className="w-full text-white font-black text-base py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg, #06c755 0%, #00a046 100%)' }}
         >
-          <span>📸</span>
-          <span>スクショしてシェア</span>
+          {sharing ? (
+            <>
+              <span className="animate-spin inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full" />
+              <span>画像を準備中...</span>
+            </>
+          ) : (
+            <>
+              <span>💚</span>
+              <span>誰が1番の理解者かLINEで共有</span>
+            </>
+          )}
         </button>
 
         {isHost ? (
