@@ -116,6 +116,7 @@ export type GameAction =
   | 'show-summary'
   | 'next-round'
   | 'kick-player'
+  | 'back-to-theme'
 
 export interface ActionRequest {
   action: GameAction
