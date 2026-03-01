@@ -157,6 +157,11 @@ export async function POST(
           { onConflict: 'room_code,round_no,player_id,guess_rank' }
         )
       if (error) throw error
+
+      // rooms.updated_at を更新してホストのETagを無効化
+      // （submit-guess は rooms を変えないため、これがないとホストにguess数が反映されない）
+      const { error: touchErr } = await updateRoom({})
+      if (touchErr) throw touchErr
       return NextResponse.json({ ok: true })
     }
 
