@@ -35,6 +35,22 @@ export const THEMES: Theme[] = [
     ],
   },
   {
+    id: 'drinks',
+    title: '好きなお酒の種類',
+    emoji: '🍺',
+    category: 'light',
+    is_free: true,
+    items: [
+      { id: 'beer',        emoji: '🍺', label: 'ビール' },
+      { id: 'highball',    emoji: '🥃', label: 'ハイボール' },
+      { id: 'sake',        emoji: '🍶', label: '日本酒' },
+      { id: 'wine',        emoji: '🍷', label: 'ワイン' },
+      { id: 'shochu',      emoji: '🫗', label: '焼酎' },
+      { id: 'lemonsour',   emoji: '🍋', label: 'レモンサワー' },
+      { id: 'tequila',     emoji: '🌵', label: 'テキーラ' },
+    ],
+  },
+  {
     id: 'date',
     title: 'デートで大事なもの',
     emoji: '🍸',

@@ -128,8 +128,23 @@ INSERT INTO themes (id, title, emoji, category, items) VALUES
   ]'::jsonb
 ),
 (
+  'drinks',
+  '好きなお酒の種類',
+  '🍺',
+  'light',
+  '[
+    {"id":"beer",      "emoji":"🍺", "label":"ビール"},
+    {"id":"highball",  "emoji":"🥃", "label":"ハイボール"},
+    {"id":"sake",      "emoji":"🍶", "label":"日本酒"},
+    {"id":"wine",      "emoji":"🍷", "label":"ワイン"},
+    {"id":"shochu",    "emoji":"🫗", "label":"焼酎"},
+    {"id":"lemonsour", "emoji":"🍋", "label":"レモンサワー"},
+    {"id":"tequila",   "emoji":"🌵", "label":"テキーラ"}
+  ]'::jsonb
+),
+(
   'date',
-  'デート',
+  'デートで大事なもの',
   '🍸',
   'light',
   '[

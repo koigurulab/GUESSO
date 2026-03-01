@@ -359,8 +359,9 @@ export default function HomePage() {
             <h2 className="text-center text-2xl font-black text-gray-900 mb-6">テーマ</h2>
             <div className="flex gap-3 max-w-sm mx-auto">
               {[
-                { emoji: '💕', label: '異性に求めるもの', items: '顔・性格・スタイル…' },
+                { emoji: '💕', label: '異性に求めるもの', items: '顔・性格・収入…' },
                 { emoji: '🌈', label: '人生で大事なもの', items: '自由・お金・趣味…' },
+                { emoji: '🍺', label: '好きなお酒の種類', items: 'ビール・日本酒・テキーラ…' },
                 { emoji: '🍸', label: 'デートで大事なもの', items: '雰囲気・映え・リード…' },
               ].map(({ emoji, label, items }) => (
                 <div
