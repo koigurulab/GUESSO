@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       if (event.type === 'follow' && event.replyToken) {
         await replyToLine(
           event.replyToken,
-          '友達追加ありがとう！🎉\n\nGUESSO で「理解できるフェチ」テーマを解放するには、\nゲームのテーマ選択画面に表示されている4桁の確認コードをこのトークに送ってね！'
+          '友達追加ありがとう！🎉\n\nGUESSO で「正直、どこフェチ？」テーマを解放するには、\nゲームのテーマ選択画面に表示されている4桁の確認コードをこのトークに送ってね！'
         )
         continue
       }
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
             await replyToLine(
               event.replyToken,
-              '✅ 認証完了！\nゲームに戻って「理解できるフェチ」テーマを楽しんでね🎉'
+              '✅ 認証完了！\nゲームに戻って「正直、どこフェチ？」テーマを楽しんでね🎉'
             )
           } else {
             console.log('[LINE webhook] 対応するルームが見つかりません（コード:', text, '）')

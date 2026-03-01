@@ -56,7 +56,7 @@ export const FREE_THEMES: Theme[] = [
 export const FETISH_THEMES: Theme[] = [
   {
     id: 'fetish-female',
-    title: '理解できるフェチ（女性）',
+    title: '正直、どこフェチ？（女性）',
     emoji: '💜',
     category: 'fetish',
     is_free: false,
@@ -72,7 +72,7 @@ export const FETISH_THEMES: Theme[] = [
   },
   {
     id: 'fetish-male',
-    title: '理解できるフェチ（男性）',
+    title: '正直、どこフェチ？（男性）',
     emoji: '💙',
     category: 'fetish',
     is_free: false,

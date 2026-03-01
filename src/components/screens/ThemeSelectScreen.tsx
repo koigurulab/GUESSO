@@ -83,7 +83,7 @@ export default function ThemeSelectScreen({ gameState, playerId, onAction }: Pro
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-black text-lg text-gray-900">理解できるフェチ</p>
+                  <p className="font-black text-lg text-gray-900">正直、どこフェチ？</p>
                   {!lineVerified && (
                     <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">
                       LINE追加で解放！

@@ -21,7 +21,7 @@ ALTER TABLE themes ADD CONSTRAINT themes_category_check
 INSERT INTO themes (id, title, emoji, category, items, is_free) VALUES
 (
   'fetish-female',
-  '理解できるフェチ（女性）',
+  '正直、どこフェチ？（女性）',
   '💜',
   'fetish',
   '[
@@ -37,7 +37,7 @@ INSERT INTO themes (id, title, emoji, category, items, is_free) VALUES
 ),
 (
   'fetish-male',
-  '理解できるフェチ（男性）',
+  '正直、どこフェチ？（男性）',
   '💙',
   'fetish',
   '[
