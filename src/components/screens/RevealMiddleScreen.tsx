@@ -61,12 +61,20 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
       </p>
 
       {isHost ? (
-        <button
-          onClick={() => onAction('open-guessing')}
-          className="btn-primary w-full max-w-sm text-xl py-4"
-        >
-          🎯 予想スタート！
-        </button>
+        <div className="w-full max-w-sm space-y-3">
+          <button
+            onClick={() => onAction('open-guessing')}
+            className="btn-primary w-full text-xl py-4"
+          >
+            🎯 予想スタート！
+          </button>
+          <button
+            onClick={() => onAction('back-to-theme')}
+            className="w-full glass rounded-2xl py-3 text-sm text-gray-500 font-semibold active:scale-95 transition-all"
+          >
+            ← テーマを選び直す
+          </button>
+        </div>
       ) : (
         <div className="glass rounded-2xl py-4 px-6 text-center w-full max-w-sm">
           <p className="text-gray-500 text-sm">⏳ ホストが予想をオープンするのを待ってます</p>

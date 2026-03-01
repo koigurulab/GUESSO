@@ -222,6 +222,30 @@ export async function POST(
     }
 
     // ========================
+    // back-to-theme（テーマ選択に戻る）
+    // ========================
+    if (action === 'back-to-theme') {
+      if (!isHost) return err('ホストのみ操作できます', 403)
+      const allowed = ['SELECT_ASKER', 'ASKER_RANKING', 'REVEAL_MIDDLE']
+      if (!allowed.includes(state)) return err(`現在 ${state} 状態のためテーマ選択に戻れません`)
+
+      // ラウンドレコードをリセット（出題者・ランキングをクリア）
+      await supabase
+        .from('rounds')
+        .update({ asker_player_id: null, ranking_json: null, middle_revealed_value: null })
+        .eq('room_code', code)
+        .eq('round_no', room.current_round)
+
+      const { error } = await updateRoom({
+        state: 'SELECT_THEME',
+        asker_player_id: null,
+        current_guess_rank: null,
+      })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // ========================
     // next-round
     // ========================
     if (action === 'next-round') {

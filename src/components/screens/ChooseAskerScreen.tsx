@@ -62,7 +62,16 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
         ))}
       </div>
 
-      {!isHost && (
+      {isHost ? (
+        <div className="mt-4">
+          <button
+            onClick={() => onAction('back-to-theme')}
+            className="w-full glass rounded-2xl py-3 text-sm text-gray-500 font-semibold active:scale-95 transition-all"
+          >
+            ← テーマを変える
+          </button>
+        </div>
+      ) : (
         <div className="mt-4 glass rounded-2xl py-4 text-center">
           <p className="text-gray-500 text-sm">⏳ ホストが出題者を選んでいます...</p>
         </div>

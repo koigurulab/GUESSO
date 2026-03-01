@@ -62,6 +62,16 @@ export default function GameRoom({ roomCode }: Props) {
 
   useEffect(() => { gameStateRef.current = gameState }, [gameState])
 
+  // ── ブラウザ戻るボタンでゲームルームを離れないようにする ──────────
+  useEffect(() => {
+    history.pushState(null, '', window.location.href)
+    const handlePopState = () => {
+      history.pushState(null, '', window.location.href)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   /** アクションエラートーストを表示（3秒で自動消去） */
   const showActionError = useCallback((msg: string) => {
     setActionError(msg)
