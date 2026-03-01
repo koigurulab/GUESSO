@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? ''
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-731H2069CC'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
