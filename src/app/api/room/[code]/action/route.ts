@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { THEMES } from '@/lib/themes'
 import type { ActionRequest, RoomState } from '@/lib/types'
 
 function err(msg: string, status = 400) {
@@ -54,6 +55,15 @@ export async function POST(
       if (!isHost) return err('ホストのみ操作できます', 403)
       if (state !== 'SELECT_THEME') return err(`現在 ${state} 状態のためテーマ選択できません`)
       if (!body.theme_id) return err('theme_idが必要です')
+
+      // テーマが存在するか確認
+      const theme = THEMES.find(t => t.id === body.theme_id)
+      if (!theme) return err('無効なテーマIDです')
+
+      // 有料テーマ（フェチ系）はLINE認証が必要
+      if (!theme.is_free && !room.line_verified) {
+        return err('このテーマはLINE認証が必要です', 403)
+      }
 
       // ラウンドレコードを作成
       const round_no = room.current_round

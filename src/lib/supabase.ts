@@ -25,3 +25,8 @@ export function generateRoomCode(): string {
   }
   return code
 }
+
+// LINE確認コード生成（4文字数字 — ルームコードと区別しやすい形式）
+export function generateVerifyCode(): string {
+  return String(Math.floor(1000 + Math.random() * 9000))
+}

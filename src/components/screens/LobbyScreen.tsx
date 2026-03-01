@@ -78,6 +78,35 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
         )}
       </div>
 
+      {/* LINE認証カード */}
+      {!gameState.room.line_verified && gameState.room.line_verify_code && (
+        <div className="glass rounded-3xl p-5 mb-4 animate-slide-up border border-green-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">🟢</span>
+            <p className="font-bold text-gray-800 text-sm">「理解できるフェチ」テーマを解放する</p>
+          </div>
+          <ol className="text-xs text-gray-600 space-y-1 mb-3 list-decimal list-inside">
+            <li>LINE公式アカウント <span className="font-bold text-green-700">@GUESSO</span> を友達追加</li>
+            <li>トーク画面で下の確認コードを送信</li>
+          </ol>
+          <div className="bg-white/70 rounded-2xl py-3 text-center">
+            <p className="text-xs text-gray-400 mb-1">確認コード</p>
+            <p className="text-4xl font-black tracking-widest text-green-700">
+              {gameState.room.line_verify_code}
+            </p>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-2">
+            認証は自動的に反映されます
+          </p>
+        </div>
+      )}
+
+      {gameState.room.line_verified && (
+        <div className="glass rounded-2xl py-3 mb-4 text-center border border-purple-200 animate-slide-up">
+          <p className="text-sm font-bold text-purple-700">💜 LINE認証済み！フェチテーマが解放されました</p>
+        </div>
+      )}
+
       {/* Start Button (host only) */}
       {isHost ? (
         <button

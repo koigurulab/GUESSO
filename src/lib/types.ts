@@ -25,7 +25,7 @@ export interface Theme {
   id: string
   title: string
   emoji: string
-  category: 'love' | 'life' | 'light' | 'custom'
+  category: 'love' | 'life' | 'light' | 'custom' | 'fetish'
   items: ThemeItem[]
   is_free: boolean
 }
@@ -81,6 +81,8 @@ export interface RoomStateResponse {
     current_round: number
     asker_player_id: string | null
     current_guess_rank: number | null  // 現在予想中の順位 (1,2,3,5,6)
+    line_verified: boolean
+    line_verify_code: string | null
   }
   players: Pick<Player, 'id' | 'name' | 'is_host' | 'last_seen'>[]
   theme: Theme | null
@@ -127,4 +129,6 @@ export interface ActionRequest {
   ranking?: string[]
   guess_top1?: string
   kick_player_id?: string
+  // LINE verification
+  line_verify_code?: string
 }

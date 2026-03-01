@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, generateRoomCode } from '@/lib/supabase'
+import { createServerClient, generateRoomCode, generateVerifyCode } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,10 +25,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ルームコードの生成に失敗しました' }, { status: 500 })
     }
 
+    // LINE確認コード生成（4桁数字）
+    const verifyCode = generateVerifyCode()
+
     // ルーム作成（host_player_id は後で更新）
     const { error: roomErr } = await supabase
       .from('rooms')
-      .insert({ code, state: 'WAITING_PLAYERS', current_round: 0 })
+      .insert({ code, state: 'WAITING_PLAYERS', current_round: 0, line_verify_code: verifyCode, line_verified: false })
     if (roomErr) throw roomErr
 
     // ホストプレイヤー作成

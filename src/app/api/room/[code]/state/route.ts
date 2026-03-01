@@ -199,6 +199,8 @@ export async function GET(
         current_round: room.current_round,
         asker_player_id: room.asker_player_id,
         current_guess_rank: room.current_guess_rank ?? null,
+        line_verified: room.line_verified ?? false,
+        line_verify_code: room.line_verify_code ?? null,
       },
       players: players ?? [],
       theme: themeData ?? null,

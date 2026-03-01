@@ -1,7 +1,7 @@
 import type { Theme } from './types'
 
 // テーマはDB seeded だが、クライアント側でも使うためここにも定義
-export const THEMES: Theme[] = [
+export const FREE_THEMES: Theme[] = [
   {
     id: 'love',
     title: '異性に求めるもの',
@@ -51,6 +51,44 @@ export const THEMES: Theme[] = [
     ],
   },
 ]
+
+// LINE認証が必要なフェチテーマ（is_free: false）
+export const FETISH_THEMES: Theme[] = [
+  {
+    id: 'fetish-female',
+    title: '理解できるフェチ（女性）',
+    emoji: '💜',
+    category: 'fetish',
+    is_free: false,
+    items: [
+      { id: 'nape',       emoji: '✨', label: 'うなじ' },
+      { id: 'collarbone', emoji: '💜', label: '鎖骨' },
+      { id: 'armpit',     emoji: '🌸', label: 'わき' },
+      { id: 'thigh',      emoji: '🌙', label: '太もも' },
+      { id: 'hand',       emoji: '🤍', label: '手' },
+      { id: 'butt',       emoji: '🍑', label: 'おしり' },
+      { id: 'chest',      emoji: '💗', label: '胸' },
+    ],
+  },
+  {
+    id: 'fetish-male',
+    title: '理解できるフェチ（男性）',
+    emoji: '💙',
+    category: 'fetish',
+    is_free: false,
+    items: [
+      { id: 'hand',       emoji: '✋', label: '手' },
+      { id: 'vein',       emoji: '💪', label: '血管' },
+      { id: 'shoulder',   emoji: '🏔', label: '肩幅' },
+      { id: 'pectoral',   emoji: '🦾', label: '胸筋' },
+      { id: 'adams',      emoji: '🔥', label: 'のどぼとけ' },
+      { id: 'collarbone', emoji: '⚡', label: '鎖骨' },
+      { id: 'calf',       emoji: '🦵', label: 'ふくらはぎ' },
+    ],
+  },
+]
+
+export const THEMES: Theme[] = [...FREE_THEMES, ...FETISH_THEMES]
 
 export function getTheme(id: string): Theme | undefined {
   return THEMES.find(t => t.id === id)
