@@ -100,12 +100,14 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         try {
           const html2canvas = (await import('html2canvas')).default
           const canvas = await html2canvas(cardEl, {
-            backgroundColor: '#0f1a3a',
-            scale: 2,
+            backgroundColor: '#ffffff',
+            scale: 3,
             useCORS: true,
             logging: false,
             scrollX: 0,
             scrollY: -window.scrollY,
+            width: 360,
+            height: 640,
           })
 
           const blob = await new Promise<Blob | null>(resolve =>
@@ -139,93 +141,173 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   return (
     <div className="min-h-dvh flex flex-col px-4 py-6">
 
-      {/* ===== シェアカード（スクショ用・意図的にダーク） ===== */}
+      {/* ===== シェアカード（9:16 ストーリーサイズ・白背景） ===== */}
       <div
         id="share-card"
-        className="rounded-3xl overflow-hidden mb-4 animate-fade-in"
-        style={{ background: 'linear-gradient(160deg, #1a0533 0%, #0f1a3a 50%, #001a10 100%)' }}
+        className="mb-4 animate-fade-in mx-auto"
+        style={{
+          width: '360px',
+          height: '640px',
+          background: '#ffffff',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.12)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        {/* ヘッダー */}
-        <div className="px-5 pt-4 pb-3 border-b border-white/10 flex items-center justify-between">
-          <span className="text-xs font-black tracking-widest text-white/30 uppercase">GUESSO</span>
-          <span className="text-xs text-white/30">ラウンド {room.current_round}</span>
-        </div>
+        {/* 上部カラーバー */}
+        <div style={{ height: '8px', background: 'linear-gradient(90deg, #7c3aed, #db2777, #f59e0b)', flexShrink: 0 }} />
 
-        {/* テーマ・出題者 */}
-        <div className="px-5 py-3 border-b border-white/10">
-          <p className="text-base font-black text-white">{theme?.emoji} {theme?.title}</p>
-          <p className="text-white/40 text-xs mt-0.5">
-            出題者: <span className="text-yellow-400 font-bold">{asker?.name}</span>
-          </p>
-        </div>
+        {/* メインコンテンツ */}
+        <div style={{ padding: '24px 24px 20px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
 
-        {/* 理解者・最下位 */}
-        {!allTied && (topScorers.length > 0 || bottomScorers.length > 0) && (
-          <div className="px-5 py-3 border-b border-white/10 space-y-2">
-            {topScorers[0] && (() => {
-              const p = players.find(pl => pl.id === topScorers[0].player_id)
-              const gc = guiCounts?.[topScorers[0].player_id] ?? 0
-              return (
-                <div className="flex items-center gap-3">
-                  <span className="text-lg shrink-0">🏆</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-yellow-300 font-black text-sm truncate">{p?.name}</p>
-                    <p className="text-white/40 text-xs">一番の理解者 · {topScorers[0].correct}/{maxRoundScore}問正解</p>
-                  </div>
-                  {guiMode && gc > 0 && <span className="text-xs text-amber-400 font-bold shrink-0">🍺×{gc}</span>}
-                </div>
-              )
-            })()}
-            {bottomScorers[0] && (() => {
-              const p = players.find(pl => pl.id === bottomScorers[0].player_id)
-              const gc = guiCounts?.[bottomScorers[0].player_id] ?? 0
-              return (
-                <div className="flex items-center gap-3">
-                  <span className="text-lg shrink-0">💀</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white/70 font-bold text-sm truncate">{p?.name}</p>
-                    <p className="text-white/30 text-xs">最下位 · {bottomScorers[0].correct}/{maxRoundScore}問正解</p>
-                  </div>
-                  {guiMode && gc > 0 && <span className="text-xs text-amber-400 font-bold shrink-0">🍺×{gc}</span>}
-                </div>
-              )
-            })()}
+          {/* GUESSO ブランディング */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <span style={{
+                fontSize: '32px',
+                fontWeight: 900,
+                background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                lineHeight: 1.1,
+              }}>GUESSO</span>
+              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>ラウンド {room.current_round}</span>
+            </div>
+            <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px', lineHeight: 1.4 }}>
+              友達の本音・価値観を予想するパーティゲーム
+            </p>
           </div>
-        )}
 
-        {/* 正解ランキング上位3位 */}
-        {ranking && (
-          <div className="px-5 py-3 border-b border-white/10">
-            <div className="space-y-1.5">
-              {ranking.slice(0, 3).map((id, idx) => {
-                if (!id) return null
-                const info = getInfo(id)
-                const rank = idx + 1
+          {/* テーマ・出題者 */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f5f3ff, #fdf2f8)',
+            borderRadius: '16px',
+            padding: '14px 16px',
+            marginBottom: '14px',
+          }}>
+            <p style={{ fontSize: '17px', fontWeight: 900, color: '#1f2937', lineHeight: 1.3 }}>
+              {theme?.emoji} {theme?.title}
+            </p>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+              出題者：<span style={{ color: '#7c3aed', fontWeight: 700 }}>{asker?.name}</span>
+            </p>
+          </div>
+
+          {/* 理解者・最下位 */}
+          {!allTied && (topScorers.length > 0 || bottomScorers.length > 0) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              {topScorers[0] && (() => {
+                const p = players.find(pl => pl.id === topScorers[0].player_id)
+                const gc = guiCounts?.[topScorers[0].player_id] ?? 0
                 return (
-                  <div key={idx} className={`flex items-center gap-2 rounded-xl px-3 py-1.5
-                    ${rank === 1 ? 'bg-yellow-400/15 border border-yellow-400/30' : 'bg-white/5'}`}
-                  >
-                    <span className="text-sm font-black w-5 text-center text-white/60">
-                      {RANK_MEDAL[rank] ?? rank}
-                    </span>
-                    {info.emoji
-                      ? <span className="text-base">{info.emoji}</span>
-                      : <span className="text-base">{isPersonRank ? '🧑' : ''}</span>
-                    }
-                    <span className={`text-sm font-semibold flex-1 ${rank === 1 ? 'text-yellow-300' : 'text-white/80'}`}>
-                      {info.label}
-                    </span>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fef9c3, #fef3c7)',
+                    border: '2px solid #fbbf24',
+                    borderRadius: '14px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}>
+                    <span style={{ fontSize: '24px', lineHeight: 1 }}>🏆</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '16px', fontWeight: 900, color: '#92400e', lineHeight: 1.3 }}>{p?.name}</p>
+                      <p style={{ fontSize: '11px', color: '#b45309', marginTop: '2px', lineHeight: 1.3 }}>
+                        {asker?.name}の一番の理解者！ · {topScorers[0].correct}/{maxRoundScore}問
+                      </p>
+                    </div>
+                    {guiMode && gc > 0 && (
+                      <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 700 }}>🍺×{gc}</span>
+                    )}
                   </div>
                 )
-              })}
+              })()}
+              {bottomScorers[0] && (() => {
+                const p = players.find(pl => pl.id === bottomScorers[0].player_id)
+                const gc = guiCounts?.[bottomScorers[0].player_id] ?? 0
+                return (
+                  <div style={{
+                    background: '#f9fafb',
+                    border: '1.5px solid #e5e7eb',
+                    borderRadius: '14px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}>
+                    <span style={{ fontSize: '24px', lineHeight: 1 }}>💦</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '15px', fontWeight: 700, color: '#4b5563', lineHeight: 1.3 }}>{p?.name}</p>
+                      <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px', lineHeight: 1.3 }}>
+                        {asker?.name}の謎がまだ解けてない...
+                      </p>
+                    </div>
+                    {guiMode && gc > 0 && (
+                      <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 700 }}>🍺×{gc}</span>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* CTA フッター */}
-        <div className="px-5 py-3 text-center">
-          <p className="text-white/60 text-xs font-bold mb-0.5">友達の本音、知ってる？</p>
-          <p className="text-white/20 text-xs">guesso-app.vercel.app</p>
+          {/* 正解ランキング上位3位 */}
+          {ranking && (
+            <div style={{
+              background: '#f9fafb',
+              borderRadius: '16px',
+              padding: '12px 14px',
+              marginBottom: '14px',
+            }}>
+              <p style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 700, marginBottom: '8px' }}>正解ランキング</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {ranking.slice(0, 3).map((id, idx) => {
+                  if (!id) return null
+                  const info = getInfo(id)
+                  const rank = idx + 1
+                  return (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: rank === 1 ? '#fef9c3' : '#ffffff',
+                      borderRadius: '10px',
+                      padding: '7px 10px',
+                      border: rank === 1 ? '1px solid #fbbf24' : '1px solid #f3f4f6',
+                    }}>
+                      <span style={{ fontSize: '16px', width: '22px', textAlign: 'center', lineHeight: 1 }}>
+                        {RANK_MEDAL[rank] ?? String(rank)}
+                      </span>
+                      {info.emoji && <span style={{ fontSize: '16px', lineHeight: 1 }}>{info.emoji}</span>}
+                      {!info.emoji && isPersonRank && <span style={{ fontSize: '16px', lineHeight: 1 }}>🧑</span>}
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: rank === 1 ? 800 : 600,
+                        color: rank === 1 ? '#92400e' : '#374151',
+                        lineHeight: 1.3,
+                      }}>{info.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* CTA フッター */}
+          <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '8px' }}>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: '2px',
+              lineHeight: 1.4,
+            }}>友達の本音、知ってる？</p>
+            <p style={{ fontSize: '11px', color: '#d1d5db', lineHeight: 1.3 }}>guesso-app.vercel.app</p>
+          </div>
         </div>
       </div>
 
