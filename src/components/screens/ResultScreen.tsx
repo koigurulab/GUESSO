@@ -19,6 +19,7 @@ function calcMostGuessed(guesses: Array<{ guess_top1: string }> | null) {
 export default function ResultScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, theme, round, guesses, my_guess } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const guiMode = room.gui_mode
   const asker = players.find(p => p.id === round?.asker_player_id)
   const ranking = round?.ranking_json
   const currentRank = room.current_guess_rank ?? 1
@@ -178,6 +179,49 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
           </div>
         </div>
       )}
+
+      {/* グイモード表示 */}
+      {guiMode && guesses && correctAnswer && (() => {
+        const wrongGuessers = guesses.filter(g => g.guess_top1 !== correctAnswer)
+        const nonAskerGuesses = guesses.filter(g => g.player_id !== room.asker_player_id)
+        const allCorrect = nonAskerGuesses.length > 0 && wrongGuessers.length === 0
+        const asker = players.find(p => p.id === round?.asker_player_id)
+
+        if (allCorrect) {
+          return (
+            <div className="rounded-3xl p-4 text-center mb-4 animate-bounce-in bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400">
+              <p className="text-3xl mb-1">🎉🍺🎉</p>
+              <p className="text-lg font-black text-amber-700">
+                みんな{asker?.name}を理解していた！
+              </p>
+              <p className="text-amber-600 font-bold">嬉しいのでグイ確定！</p>
+            </div>
+          )
+        }
+
+        if (wrongGuessers.length === 0) return null
+
+        return (
+          <div className="rounded-3xl p-4 mb-4 animate-bounce-in bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300">
+            <p className="text-center font-black text-red-600 mb-2">🍺 グイ確定！</p>
+            <div className="space-y-1">
+              {wrongGuessers.map(g => {
+                const p = players.find(pl => pl.id === g.player_id)
+                const info = getInfo(g.guess_top1)
+                return (
+                  <div key={g.player_id} className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+                    <span className="text-lg">😅</span>
+                    <span className="font-bold text-gray-800 flex-1">{p?.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {info.emoji} {info.label} と予想
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ボタン */}
       <div className="space-y-3">

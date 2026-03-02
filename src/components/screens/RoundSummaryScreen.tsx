@@ -20,6 +20,8 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
   const ranking = round?.ranking_json
   const isPersonRank = round?.is_person_rank ?? false
   const rankSeq = round?.rank_sequence ?? [1, 2, 3, 5, 6]
+  const guiMode = room.gui_mode
+  const guiCounts = round?.gui_counts ?? null
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -58,24 +60,30 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
     const winner = topScorers[0]
       ? players.find(p => p.id === topScorers[0].player_id)?.name
       : null
-    const scoreText = sortedScores
-      .map((s, i) => {
-        const p = players.find(pl => pl.id === s.player_id)
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
-        return `${medal} ${p?.name ?? '?'}: ${s.total}点`
-      })
-      .join('\n')
+    const loser = bottomScorers[0]
+      ? players.find(p => p.id === bottomScorers[0].player_id)?.name
+      : null
+    const guiLine = guiMode && guiCounts
+      ? Object.entries(guiCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 1)
+          .map(([pid, count]) => {
+            const p = players.find(pl => pl.id === pid)
+            return `🍺 ${p?.name ?? '?'}は${count}杯グイ！`
+          })[0] ?? ''
+      : ''
 
     return [
       winner
-        ? `🏆 ${winner}が${asker?.name}の${isPersonRank ? 'ランキング' : '価値観'}を一番わかってた！`
-        : `🎮 GUESSOで${asker?.name}の${isPersonRank ? 'ランキング' : '価値観'}を予想したよ！`,
+        ? `🏆 ${winner}が${asker?.name}の本音を一番わかってた！`
+        : `🎮 ${asker?.name}の本音を予想したよ！`,
       `テーマ: ${theme?.emoji ?? ''} ${theme?.title ?? ''}`,
+      loser ? `💀 ${loser}はちょっと理解不足...` : '',
+      guiLine,
       '',
-      scoreText,
-      '',
-      '▶ 一緒に遊ぶ → https://guesso-app.vercel.app',
-      '#GUESSO #価値観ゲーム',
+      '友達の本音、知ってる？',
+      '▶ https://guesso-app.vercel.app',
+      '#GUESSO',
     ].filter(Boolean).join('\n')
   }
 
@@ -137,49 +145,76 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         className="rounded-3xl overflow-hidden mb-4 animate-fade-in"
         style={{ background: 'linear-gradient(160deg, #1a0533 0%, #0f1a3a 50%, #001a10 100%)' }}
       >
-        {/* カードヘッダー */}
-        <div className="px-5 pt-5 pb-3 border-b border-white/10">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-black tracking-widest text-white/30 uppercase">GUESSO</span>
-            <span className="text-xs text-white/30">ラウンド {room.current_round}</span>
-          </div>
-          <p className="text-lg font-black text-white">
-            {theme?.emoji} {theme?.title}
-          </p>
-          <p className="text-white/50 text-sm">
+        {/* ヘッダー */}
+        <div className="px-5 pt-4 pb-3 border-b border-white/10 flex items-center justify-between">
+          <span className="text-xs font-black tracking-widest text-white/30 uppercase">GUESSO</span>
+          <span className="text-xs text-white/30">ラウンド {room.current_round}</span>
+        </div>
+
+        {/* テーマ・出題者 */}
+        <div className="px-5 py-3 border-b border-white/10">
+          <p className="text-base font-black text-white">{theme?.emoji} {theme?.title}</p>
+          <p className="text-white/40 text-xs mt-0.5">
             出題者: <span className="text-yellow-400 font-bold">{asker?.name}</span>
           </p>
         </div>
 
-        {/* 全ランキング */}
+        {/* 理解者・最下位 */}
+        {!allTied && (topScorers.length > 0 || bottomScorers.length > 0) && (
+          <div className="px-5 py-3 border-b border-white/10 space-y-2">
+            {topScorers[0] && (() => {
+              const p = players.find(pl => pl.id === topScorers[0].player_id)
+              const gc = guiCounts?.[topScorers[0].player_id] ?? 0
+              return (
+                <div className="flex items-center gap-3">
+                  <span className="text-lg shrink-0">🏆</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-yellow-300 font-black text-sm truncate">{p?.name}</p>
+                    <p className="text-white/40 text-xs">一番の理解者 · {topScorers[0].correct}/{maxRoundScore}問正解</p>
+                  </div>
+                  {guiMode && gc > 0 && <span className="text-xs text-amber-400 font-bold shrink-0">🍺×{gc}</span>}
+                </div>
+              )
+            })()}
+            {bottomScorers[0] && (() => {
+              const p = players.find(pl => pl.id === bottomScorers[0].player_id)
+              const gc = guiCounts?.[bottomScorers[0].player_id] ?? 0
+              return (
+                <div className="flex items-center gap-3">
+                  <span className="text-lg shrink-0">💀</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/70 font-bold text-sm truncate">{p?.name}</p>
+                    <p className="text-white/30 text-xs">最下位 · {bottomScorers[0].correct}/{maxRoundScore}問正解</p>
+                  </div>
+                  {guiMode && gc > 0 && <span className="text-xs text-amber-400 font-bold shrink-0">🍺×{gc}</span>}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* 正解ランキング上位3位 */}
         {ranking && (
-          <div className="px-4 py-3 border-b border-white/10">
-            <p className="text-white/30 text-xs mb-2">正解ランキング</p>
+          <div className="px-5 py-3 border-b border-white/10">
             <div className="space-y-1.5">
-              {ranking.map((id, idx) => {
+              {ranking.slice(0, 3).map((id, idx) => {
                 if (!id) return null
                 const info = getInfo(id)
                 const rank = idx + 1
-                const isTop = rank === 1
-                const isHint = idx === hintIndex && hintIndex >= 0
                 return (
                   <div key={idx} className={`flex items-center gap-2 rounded-xl px-3 py-1.5
-                    ${isTop ? 'bg-yellow-400/15 border border-yellow-400/30' :
-                      isHint ? 'bg-pink-400/10 border border-pink-400/20' :
-                      'bg-white/5'}`}
+                    ${rank === 1 ? 'bg-yellow-400/15 border border-yellow-400/30' : 'bg-white/5'}`}
                   >
-                    <span className="text-sm font-black w-6 text-center text-white/60">
+                    <span className="text-sm font-black w-5 text-center text-white/60">
                       {RANK_MEDAL[rank] ?? rank}
                     </span>
-                    {info.emoji ? (
-                      <span className="text-lg">{info.emoji}</span>
-                    ) : (
-                      <span className="text-lg">{isPersonRank ? '🧑' : ''}</span>
-                    )}
-                    <span className={`text-sm font-semibold flex-1 ${isTop ? 'text-yellow-300' : 'text-white/80'}`}>
+                    {info.emoji
+                      ? <span className="text-base">{info.emoji}</span>
+                      : <span className="text-base">{isPersonRank ? '🧑' : ''}</span>
+                    }
+                    <span className={`text-sm font-semibold flex-1 ${rank === 1 ? 'text-yellow-300' : 'text-white/80'}`}>
                       {info.label}
                     </span>
-                    {isHint && <span className="text-xs text-pink-400 opacity-60">ヒント</span>}
                   </div>
                 )
               })}
@@ -187,35 +222,10 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
           </div>
         )}
 
-        {/* スコアボード */}
-        <div className="px-4 py-3">
-          <p className="text-white/30 text-xs mb-2">累計スコア</p>
-          <div className="space-y-2">
-            {sortedScores.map((s, i) => {
-              const p = players.find(pl => pl.id === s.player_id)
-              const isAskerThisRound = s.player_id === room.asker_player_id
-              const barPct = maxTotal > 0 ? Math.round((s.total / maxTotal) * 100) : 0
-              return (
-                <div key={s.player_id} className="flex items-center gap-2">
-                  <span className="text-sm w-5 text-center">{RANK_MEDAL[i + 1] ?? ''}</span>
-                  <span className="text-sm font-semibold w-16 truncate text-white/80">{p?.name}</span>
-                  <div className="flex-1 bg-white/10 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500"
-                      style={{ width: `${barPct}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-black text-white w-8 text-right">{s.total}</span>
-                  {isAskerThisRound && <span className="text-xs text-yellow-400/60">出題</span>}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* カードフッター */}
-        <div className="px-5 py-3 border-t border-white/10">
-          <p className="text-white/20 text-xs text-center">guesso-app.vercel.app</p>
+        {/* CTA フッター */}
+        <div className="px-5 py-3 text-center">
+          <p className="text-white/60 text-xs font-bold mb-0.5">友達の本音、知ってる？</p>
+          <p className="text-white/20 text-xs">guesso-app.vercel.app</p>
         </div>
       </div>
 
@@ -257,6 +267,31 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
           })}
         </div>
       )}
+
+      {/* ===== グイ数ランキング ===== */}
+      {guiMode && guiCounts && Object.keys(guiCounts).length > 0 && (() => {
+        const guiRanking = Object.entries(guiCounts)
+          .sort((a, b) => b[1] - a[1])
+        return (
+          <div className="glass rounded-2xl p-4 mb-4 animate-fade-in">
+            <p className="text-gray-500 text-xs font-bold mb-2">🍺 今回のグイ数ランキング</p>
+            <div className="space-y-2">
+              {guiRanking.map(([pid, count], i) => {
+                const p = players.find(pl => pl.id === pid)
+                const isAsker = pid === room.asker_player_id
+                return (
+                  <div key={pid} className="flex items-center gap-3">
+                    <span className="text-sm w-5 text-center">{i === 0 ? '🥇' : `${i + 1}.`}</span>
+                    <span className="font-semibold flex-1 text-sm text-gray-800 truncate">{p?.name}</span>
+                    {isAsker && <span className="text-xs text-yellow-600 font-bold">全員正解</span>}
+                    <span className="font-black text-amber-600">{count}杯 🍺</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ===== ボタン ===== */}
       <div className="space-y-3 mt-auto">

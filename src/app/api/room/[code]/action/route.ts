@@ -122,6 +122,7 @@ export async function POST(
       const { error } = await updateRoom({
         state: nextState,
         asker_player_id: body.asker_player_id,
+        gui_mode: body.gui_mode ?? false,
       })
       if (error) throw error
       return NextResponse.json({ ok: true })
@@ -309,7 +310,7 @@ export async function POST(
       // rank_sequence の最後のランクまで予想したか確認
       const { data: round } = await supabase
         .from('rounds')
-        .select('rank_sequence')
+        .select('rank_sequence, ranking_json, asker_player_id')
         .eq('room_code', code)
         .eq('round_no', room.current_round)
         .single()
@@ -318,6 +319,42 @@ export async function POST(
       const lastRank = rankSeq[rankSeq.length - 1]
       if (room.current_guess_rank !== lastRank) {
         return err('まだ全ての順位を予想し終えていません')
+      }
+
+      // グイモードの場合、グイ数を計算して保存
+      if (room.gui_mode) {
+        const { data: allGuesses } = await supabase
+          .from('guesses')
+          .select('player_id, guess_rank, guess_top1')
+          .eq('room_code', code)
+          .eq('round_no', room.current_round)
+
+        const rankingJson = (round?.ranking_json as string[] | null) ?? []
+        const askerPlayerId: string | null = round?.asker_player_id ?? null
+        const guiCounts: Record<string, number> = {}
+
+        for (const rank of rankSeq) {
+          const correctAnswer = rankingJson[rank - 1]
+          const guessesForRank = (allGuesses ?? []).filter(g => g.guess_rank === rank)
+          const wrongGuessers = guessesForRank.filter(g => g.guess_top1 !== correctAnswer)
+          const allCorrect = guessesForRank.length > 0 && wrongGuessers.length === 0
+
+          if (allCorrect && askerPlayerId) {
+            // 全員正解 → 出題者がグイ
+            guiCounts[askerPlayerId] = (guiCounts[askerPlayerId] ?? 0) + 1
+          } else {
+            // 外した人がグイ
+            wrongGuessers.forEach(g => {
+              guiCounts[g.player_id] = (guiCounts[g.player_id] ?? 0) + 1
+            })
+          }
+        }
+
+        await supabase
+          .from('rounds')
+          .update({ gui_counts: guiCounts })
+          .eq('room_code', code)
+          .eq('round_no', room.current_round)
       }
 
       const { error } = await updateRoom({ state: 'ROUND_SUMMARY' })
@@ -395,6 +432,7 @@ export async function POST(
         current_round: room.current_round + 1,
         asker_player_id: null,
         current_guess_rank: null,
+        gui_mode: false,
       })
       if (error) throw error
       return NextResponse.json({ ok: true })

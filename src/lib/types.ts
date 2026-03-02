@@ -85,6 +85,7 @@ export interface RoomStateResponse {
     current_guess_rank: number | null  // 現在予想中の順位 (1,2,3,5,6)
     line_verified: boolean
     line_verify_code: string | null
+    gui_mode: boolean  // グイモード: 外した人が飲む
   }
   players: Pick<Player, 'id' | 'name' | 'is_host' | 'last_seen'>[]
   theme: Theme | null
@@ -97,6 +98,7 @@ export interface RoomStateResponse {
     is_person_rank: boolean
     target_player_ids: string[] | null     // 人ランキング: 対象プレイヤーID一覧
     rank_sequence: number[] | null         // 予想する順位配列 e.g.[1,2,4]
+    gui_counts: Record<string, number> | null  // グイ数 player_id→count（ROUND_SUMMARYのみ）
   } | null
   guess_count: number
   my_guess: string | null
@@ -139,4 +141,6 @@ export interface ActionRequest {
   line_verify_code?: string
   // 人ランキング: 対象プレイヤーID一覧
   target_player_ids?: string[]
+  // グイモード
+  gui_mode?: boolean
 }

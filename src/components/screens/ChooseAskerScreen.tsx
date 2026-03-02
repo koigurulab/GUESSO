@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { RoomStateResponse } from '@/lib/types'
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 export default function ChooseAskerScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, theme } = gameState
   const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const [guiMode, setGuiMode] = useState(false)
 
   return (
     <div className="min-h-dvh flex flex-col px-4 py-8">
@@ -35,12 +37,32 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
         </div>
       )}
 
+      {/* グイモードトグル（ホストのみ） */}
+      {isHost && (
+        <button
+          onClick={() => setGuiMode(prev => !prev)}
+          className={`w-full rounded-2xl px-5 py-3 mb-4 flex items-center gap-3 transition-all active:scale-95
+            ${guiMode ? 'bg-amber-50 border-2 border-amber-400' : 'glass border-2 border-transparent'}`}
+        >
+          <span className="text-2xl">🍺</span>
+          <div className="flex-1 text-left">
+            <p className={`font-black text-sm ${guiMode ? 'text-amber-700' : 'text-gray-600'}`}>
+              グイモード {guiMode ? 'ON' : 'OFF'}
+            </p>
+            <p className="text-xs text-gray-400">外した人はお酒を一杯！</p>
+          </div>
+          <div className={`w-11 h-6 rounded-full transition-all ${guiMode ? 'bg-amber-400' : 'bg-gray-200'}`}>
+            <div className={`w-5 h-5 bg-white rounded-full mt-0.5 shadow transition-all ${guiMode ? 'ml-5' : 'ml-0.5'}`} />
+          </div>
+        </button>
+      )}
+
       {/* Player list */}
       <div className="space-y-2 flex-1 animate-slide-up">
         {players.map(p => (
           <button
             key={p.id}
-            onClick={() => isHost && onAction('select-asker', { asker_player_id: p.id })}
+            onClick={() => isHost && onAction('select-asker', { asker_player_id: p.id, gui_mode: guiMode })}
             disabled={!isHost}
             className={`
               w-full glass rounded-2xl px-5 py-4 flex items-center gap-3

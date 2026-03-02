@@ -129,6 +129,9 @@ export async function GET(
           is_person_rank: isPersonRank,
           target_player_ids: targetIds,
           rank_sequence: rankSeq,
+          gui_counts: room.state === 'ROUND_SUMMARY'
+            ? (round.gui_counts as Record<string, number> | null) ?? null
+            : null,
         }
 
         // 予想数を取得（現在の順位のみ）
@@ -213,6 +216,7 @@ export async function GET(
         current_guess_rank: room.current_guess_rank ?? null,
         line_verified: room.line_verified ?? false,
         line_verify_code: room.line_verify_code ?? null,
+        gui_mode: room.gui_mode ?? false,
       },
       players: players ?? [],
       theme: themeData ?? null,
