@@ -99,28 +99,43 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
       if (cardEl && typeof navigator !== 'undefined' && navigator.share) {
         try {
           const html2canvas = (await import('html2canvas')).default
-          const rawCanvas = await html2canvas(cardEl, {
-            backgroundColor: '#ffffff',
-            scale: 3,
-            useCORS: true,
-            logging: false,
-            onclone: (clonedDoc, el) => {
-              // アニメーション・トランスフォームを除去
-              el.style.animation = 'none'
-              el.style.transform = 'none'
-              // 祖先要素のpadding/marginを除去してカードが(0,0)から描画されるようにする
-              let parent = el.parentElement
-              while (parent) {
-                parent.style.padding = '0'
-                parent.style.margin = '0'
-                parent.style.minHeight = 'unset'
-                if (parent === clonedDoc.body) break
-                parent = parent.parentElement
-              }
-            },
-          })
 
-          // overflow:hiddenを無視してキャプチャされる問題対策: 正確に360×640(scale3=1080×1920)にクロップ
+          // カードを一時的に position:fixed で (0,0) に移動してからキャプチャ
+          // → html2canvas がスクロールや祖先のpaddingによる位置ズレを起こさないようにする
+          const origStyle = cardEl.style.cssText
+          const origClass = cardEl.className
+
+          let rawCanvas: HTMLCanvasElement | null = null
+          try {
+            cardEl.className = ''
+            cardEl.style.cssText = [
+              'position:fixed', 'top:0', 'left:0',
+              'width:360px', 'height:640px',
+              'background:#ffffff', 'border-radius:24px',
+              'overflow:hidden', 'display:flex', 'flex-direction:column',
+              'margin:0', 'box-shadow:none', 'z-index:99999',
+            ].join(';')
+
+            // レイアウト再計算を待つ
+            await new Promise(r => requestAnimationFrame(r))
+
+            rawCanvas = await html2canvas(cardEl, {
+              backgroundColor: '#ffffff',
+              scale: 3,
+              useCORS: true,
+              logging: false,
+              scrollX: 0,
+              scrollY: 0,
+            })
+          } finally {
+            // エラー時も含め必ず元のスタイルに戻す
+            cardEl.style.cssText = origStyle
+            cardEl.className = origClass
+          }
+
+          if (!rawCanvas) throw new Error('capture failed')
+
+          // 正確に 1080×1920 (360*3 × 640*3) にクロップ
           const targetW = 360 * 3
           const targetH = 640 * 3
           const croppedCanvas = document.createElement('canvas')
@@ -134,7 +149,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
           }
 
           const blob = await new Promise<Blob | null>(resolve =>
-            (ctx ? croppedCanvas : rawCanvas).toBlob(resolve, 'image/png')
+            (ctx ? croppedCanvas : rawCanvas!).toBlob(resolve, 'image/png')
           )
 
           if (blob) {
