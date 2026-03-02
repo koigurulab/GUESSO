@@ -100,26 +100,26 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         try {
           const html2canvas = (await import('html2canvas')).default
 
-          // カードを一時的に position:fixed で (0,0) に移動してからキャプチャ
-          // → html2canvas がスクロールや祖先のpaddingによる位置ズレを起こさないようにする
-          const origStyle = cardEl.style.cssText
-          const origClass = cardEl.className
+          // カードのinnerHTMLを完全に独立した新しいdivにコピーしてキャプチャ
+          // → 元のDOMツリー（祖先のpadding/flex/scroll等）から切り離すことでズレを防ぐ
+          // ※ カード内は全てinlineスタイルなのでinnerHTMLコピーで見た目が完全再現される
+          const wrapper = document.createElement('div')
+          wrapper.style.cssText = [
+            'position:fixed', 'top:0', 'left:0',
+            'width:360px', 'height:640px',
+            'background:#ffffff', 'border-radius:24px',
+            'overflow:hidden', 'display:flex', 'flex-direction:column',
+            'z-index:99999', 'pointer-events:none',
+          ].join(';')
+          wrapper.innerHTML = cardEl.innerHTML
+          document.body.appendChild(wrapper)
 
           let rawCanvas: HTMLCanvasElement | null = null
           try {
-            cardEl.className = ''
-            cardEl.style.cssText = [
-              'position:fixed', 'top:0', 'left:0',
-              'width:360px', 'height:640px',
-              'background:#ffffff', 'border-radius:24px',
-              'overflow:hidden', 'display:flex', 'flex-direction:column',
-              'margin:0', 'box-shadow:none', 'z-index:99999',
-            ].join(';')
-
-            // レイアウト再計算を待つ
+            // レイアウト確定を待つ
             await new Promise(r => requestAnimationFrame(r))
 
-            rawCanvas = await html2canvas(cardEl, {
+            rawCanvas = await html2canvas(wrapper, {
               backgroundColor: '#ffffff',
               scale: 3,
               useCORS: true,
@@ -128,9 +128,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
               scrollY: 0,
             })
           } finally {
-            // エラー時も含め必ず元のスタイルに戻す
-            cardEl.style.cssText = origStyle
-            cardEl.className = origClass
+            document.body.removeChild(wrapper)
           }
 
           if (!rawCanvas) throw new Error('capture failed')
