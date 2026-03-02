@@ -104,10 +104,6 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
             scale: 3,
             useCORS: true,
             logging: false,
-            scrollX: 0,
-            scrollY: -window.scrollY,
-            width: 360,
-            height: 640,
           })
 
           const blob = await new Promise<Blob | null>(resolve =>
@@ -163,19 +159,20 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         <div style={{ padding: '24px 24px 20px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
 
           {/* GUESSO ブランディング */}
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={{
-                fontSize: '32px',
-                fontWeight: 900,
-                background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                lineHeight: 1.1,
-              }}>GUESSO</span>
-              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>ラウンド {room.current_round}</span>
+              <div>
+                <span style={{
+                  fontSize: '30px',
+                  fontWeight: 900,
+                  color: '#7c3aed',
+                  lineHeight: 1.1,
+                }}>GUESSO</span>
+                <span style={{ fontSize: '13px', color: '#7c3aed', fontWeight: 700, marginLeft: '4px' }}>（ゲッソ）</span>
+              </div>
+              <span style={{ fontSize: '11px', color: '#374151', fontWeight: 600 }}>ラウンド {room.current_round}</span>
             </div>
-            <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '11px', color: '#374151', marginTop: '2px', lineHeight: 1.4 }}>
               友達の本音・価値観を予想するパーティゲーム
             </p>
           </div>
@@ -190,14 +187,14 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
             <p style={{ fontSize: '17px', fontWeight: 900, color: '#1f2937', lineHeight: 1.3 }}>
               {theme?.emoji} {theme?.title}
             </p>
-            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+            <p style={{ fontSize: '12px', color: '#374151', marginTop: '4px' }}>
               出題者：<span style={{ color: '#7c3aed', fontWeight: 700 }}>{asker?.name}</span>
             </p>
           </div>
 
           {/* 理解者・最下位 */}
           {!allTied && (topScorers.length > 0 || bottomScorers.length > 0) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
               {topScorers[0] && (() => {
                 const p = players.find(pl => pl.id === topScorers[0].player_id)
                 const gc = guiCounts?.[topScorers[0].player_id] ?? 0
@@ -206,7 +203,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                     background: 'linear-gradient(135deg, #fef9c3, #fef3c7)',
                     border: '2px solid #fbbf24',
                     borderRadius: '14px',
-                    padding: '12px 16px',
+                    padding: '10px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
@@ -232,7 +229,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                     background: '#f9fafb',
                     border: '1.5px solid #e5e7eb',
                     borderRadius: '14px',
-                    padding: '12px 16px',
+                    padding: '10px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
@@ -253,17 +250,19 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
             </div>
           )}
 
-          {/* 正解ランキング上位3位 */}
+          {/* 価値観ランキング */}
           {ranking && (
             <div style={{
               background: '#f9fafb',
               borderRadius: '16px',
-              padding: '12px 14px',
-              marginBottom: '14px',
+              padding: '10px 12px',
+              marginBottom: '10px',
             }}>
-              <p style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 700, marginBottom: '8px' }}>正解ランキング</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {ranking.slice(0, 3).map((id, idx) => {
+              <p style={{ fontSize: '11px', color: '#374151', fontWeight: 700, marginBottom: '6px' }}>
+                {asker?.name}の価値観ランキング
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {ranking.filter(id => id !== null).map((id, idx) => {
                   if (!id) return null
                   const info = getInfo(id)
                   const rank = idx + 1
@@ -271,22 +270,22 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
                     <div key={idx} style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px',
+                      gap: '6px',
                       background: rank === 1 ? '#fef9c3' : '#ffffff',
-                      borderRadius: '10px',
-                      padding: '7px 10px',
+                      borderRadius: '8px',
+                      padding: '5px 8px',
                       border: rank === 1 ? '1px solid #fbbf24' : '1px solid #f3f4f6',
                     }}>
-                      <span style={{ fontSize: '16px', width: '22px', textAlign: 'center', lineHeight: 1 }}>
+                      <span style={{ fontSize: '14px', width: '20px', textAlign: 'center', lineHeight: 1 }}>
                         {RANK_MEDAL[rank] ?? String(rank)}
                       </span>
-                      {info.emoji && <span style={{ fontSize: '16px', lineHeight: 1 }}>{info.emoji}</span>}
-                      {!info.emoji && isPersonRank && <span style={{ fontSize: '16px', lineHeight: 1 }}>🧑</span>}
+                      {info.emoji && <span style={{ fontSize: '14px', lineHeight: 1 }}>{info.emoji}</span>}
+                      {!info.emoji && isPersonRank && <span style={{ fontSize: '14px', lineHeight: 1 }}>🧑</span>}
                       <span style={{
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: rank === 1 ? 800 : 600,
                         color: rank === 1 ? '#92400e' : '#374151',
-                        lineHeight: 1.3,
+                        lineHeight: 1.2,
                       }}>{info.label}</span>
                     </div>
                   )
@@ -296,17 +295,15 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
           )}
 
           {/* CTA フッター */}
-          <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '8px' }}>
+          <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '6px' }}>
             <p style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: 900,
-              background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: '#7c3aed',
               marginBottom: '2px',
               lineHeight: 1.4,
             }}>友達の本音、知ってる？</p>
-            <p style={{ fontSize: '11px', color: '#d1d5db', lineHeight: 1.3 }}>guesso-app.vercel.app</p>
+            <p style={{ fontSize: '11px', color: '#374151', lineHeight: 1.3 }}>guesso-app.vercel.app</p>
           </div>
         </div>
       </div>
