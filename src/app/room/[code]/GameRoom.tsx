@@ -2,19 +2,28 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import type { RoomStateResponse } from '@/lib/types'
 import { trackEvent } from '@/lib/analytics'
 
-import LobbyScreen from '@/components/screens/LobbyScreen'
-import ThemeSelectScreen from '@/components/screens/ThemeSelectScreen'
-import ChooseAskerScreen from '@/components/screens/ChooseAskerScreen'
-import RankInputScreen from '@/components/screens/RankInputScreen'
-import RevealMiddleScreen from '@/components/screens/RevealMiddleScreen'
-import GuessingScreen from '@/components/screens/GuessingScreen'
-import GuessingClosedScreen from '@/components/screens/GuessingClosedScreen'
-import ResultScreen from '@/components/screens/ResultScreen'
-import RoundSummaryScreen from '@/components/screens/RoundSummaryScreen'
-import SelectTargetsScreen from '@/components/screens/SelectTargetsScreen'
+// 各画面を動的import → 初期バンドルを最小化（join formだけ表示するために全画面コンポーネントは不要）
+const Spinner = () => (
+  <div className="min-h-dvh flex flex-col items-center justify-center">
+    <div className="text-4xl mb-3">🎯</div>
+    <p className="text-gray-400 text-sm">読み込み中...</p>
+  </div>
+)
+
+const LobbyScreen       = dynamic(() => import('@/components/screens/LobbyScreen'),        { loading: Spinner })
+const ThemeSelectScreen = dynamic(() => import('@/components/screens/ThemeSelectScreen'),   { loading: Spinner })
+const ChooseAskerScreen = dynamic(() => import('@/components/screens/ChooseAskerScreen'),   { loading: Spinner })
+const SelectTargetsScreen = dynamic(() => import('@/components/screens/SelectTargetsScreen'), { loading: Spinner })
+const RankInputScreen   = dynamic(() => import('@/components/screens/RankInputScreen'),     { loading: Spinner })
+const RevealMiddleScreen = dynamic(() => import('@/components/screens/RevealMiddleScreen'), { loading: Spinner })
+const GuessingScreen    = dynamic(() => import('@/components/screens/GuessingScreen'),      { loading: Spinner })
+const GuessingClosedScreen = dynamic(() => import('@/components/screens/GuessingClosedScreen'), { loading: Spinner })
+const ResultScreen      = dynamic(() => import('@/components/screens/ResultScreen'),        { loading: Spinner })
+const RoundSummaryScreen = dynamic(() => import('@/components/screens/RoundSummaryScreen'), { loading: Spinner })
 
 // ── ポーリング間隔（状態ごとに調整）──────────────────────────
 const POLL_INTERVALS: Partial<Record<string, number>> = {

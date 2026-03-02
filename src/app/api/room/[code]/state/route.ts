@@ -39,19 +39,38 @@ export async function GET(
         .then(() => {})
     }
 
-    // ── ③ ETag変更検知 ───────────────────────────────────────
-    if (ver && room.updated_at && ver === room.updated_at) {
-      return NextResponse.json({ changed: false })
-    }
-
-    // ── ④ 以下は状態が変わっていた場合のみ実行 ───────────────
-
-    // プレイヤー一覧取得
+    // ── ③ プレイヤー一覧取得（ホスト死活監視のため常時取得）────────────
     const { data: players } = await supabase
       .from('players')
       .select('id, name, is_host, last_seen')
       .eq('room_code', code)
       .order('joined_at', { ascending: true })
+
+    // ── ④ ホスト離脱検出 → 自動移譲 ────────────────────────────────────
+    // ホストの last_seen が60秒以上前なら次のプレイヤーへ移譲（fire-and-forget）
+    if (players && players.length >= 2) {
+      const hostPlayer = players.find(p => p.is_host)
+      if (hostPlayer?.last_seen) {
+        const offlineSec = (Date.now() - new Date(hostPlayer.last_seen).getTime()) / 1000
+        if (offlineSec > 60) {
+          const nextHost = players.find(p => !p.is_host) // joined_at昇順で最初の非ホスト
+          if (nextHost) {
+            Promise.all([
+              supabase.from('players').update({ is_host: false }).eq('id', hostPlayer.id).eq('room_code', code),
+              supabase.from('players').update({ is_host: true }).eq('id', nextHost.id).eq('room_code', code),
+              supabase.from('rooms').update({ updated_at: new Date().toISOString() }).eq('code', code),
+            ]).catch(() => {})
+          }
+        }
+      }
+    }
+
+    // ── ⑤ ETag変更検知 ───────────────────────────────────────────────────
+    if (ver && room.updated_at && ver === room.updated_at) {
+      return NextResponse.json({ changed: false })
+    }
+
+    // ── ⑥ 以下は状態が変わっていた場合のみ実行 ──────────────────────────
 
     // 現在ラウンドの取得
     let roundData = null
