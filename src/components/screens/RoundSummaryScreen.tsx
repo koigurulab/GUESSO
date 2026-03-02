@@ -196,7 +196,7 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         <div style={{ height: '8px', background: 'linear-gradient(90deg, #7c3aed, #db2777, #f59e0b)', flexShrink: 0 }} />
 
         {/* メインコンテンツ */}
-        <div style={{ padding: '24px 24px 20px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={{ padding: '24px 24px 20px', display: 'flex', flexDirection: 'column', height: '632px', boxSizing: 'border-box' }}>
 
           {/* GUESSO ブランディング */}
           <div style={{ marginBottom: '12px' }}>
