@@ -99,15 +99,42 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
       if (cardEl && typeof navigator !== 'undefined' && navigator.share) {
         try {
           const html2canvas = (await import('html2canvas')).default
-          const canvas = await html2canvas(cardEl, {
+          const rawCanvas = await html2canvas(cardEl, {
             backgroundColor: '#ffffff',
             scale: 3,
             useCORS: true,
             logging: false,
+            onclone: (clonedDoc, el) => {
+              // アニメーション・トランスフォームを除去
+              el.style.animation = 'none'
+              el.style.transform = 'none'
+              // 祖先要素のpadding/marginを除去してカードが(0,0)から描画されるようにする
+              let parent = el.parentElement
+              while (parent) {
+                parent.style.padding = '0'
+                parent.style.margin = '0'
+                parent.style.minHeight = 'unset'
+                if (parent === clonedDoc.body) break
+                parent = parent.parentElement
+              }
+            },
           })
 
+          // overflow:hiddenを無視してキャプチャされる問題対策: 正確に360×640(scale3=1080×1920)にクロップ
+          const targetW = 360 * 3
+          const targetH = 640 * 3
+          const croppedCanvas = document.createElement('canvas')
+          croppedCanvas.width = targetW
+          croppedCanvas.height = targetH
+          const ctx = croppedCanvas.getContext('2d')
+          if (ctx) {
+            ctx.fillStyle = '#ffffff'
+            ctx.fillRect(0, 0, targetW, targetH)
+            ctx.drawImage(rawCanvas, 0, 0)
+          }
+
           const blob = await new Promise<Blob | null>(resolve =>
-            canvas.toBlob(resolve, 'image/png')
+            (ctx ? croppedCanvas : rawCanvas).toBlob(resolve, 'image/png')
           )
 
           if (blob) {
