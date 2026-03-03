@@ -12,6 +12,7 @@ export type RoomState =
   | 'GUESSING_CLOSED'   // 締切（ホストが結果公開待ち）
   | 'RESULT_REVEALED'   // 順位ごとの結果公開
   | 'ROUND_SUMMARY'     // ラウンド終了サマリー（スコアボード）
+  | 'END_GAME'          // ゲーム終了（最終スコアボード）
 
 // ============================================================
 // DB Models
@@ -125,6 +126,8 @@ export type GameAction =
   | 'next-rank'
   | 'show-summary'
   | 'next-round'
+  | 'end-game'
+  | 'new-game'
   | 'kick-player'
   | 'back-to-theme'
 

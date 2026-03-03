@@ -189,8 +189,8 @@ export async function GET(
           guessesResult = allGuesses ?? []
         }
 
-        // ROUND_SUMMARY: スコア計算（ゲーム通算 + 今ラウンド）
-        if (room.state === 'ROUND_SUMMARY') {
+        // ROUND_SUMMARY / END_GAME: スコア計算（ゲーム通算 + 今ラウンド）
+        if (room.state === 'ROUND_SUMMARY' || room.state === 'END_GAME') {
           const [{ data: allRounds }, { data: allGuesses }] = await Promise.all([
             supabase
               .from('rounds')

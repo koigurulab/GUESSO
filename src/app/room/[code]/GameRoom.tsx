@@ -24,6 +24,7 @@ const GuessingScreen    = dynamic(() => import('@/components/screens/GuessingScr
 const GuessingClosedScreen = dynamic(() => import('@/components/screens/GuessingClosedScreen'), { loading: Spinner })
 const ResultScreen      = dynamic(() => import('@/components/screens/ResultScreen'),        { loading: Spinner })
 const RoundSummaryScreen = dynamic(() => import('@/components/screens/RoundSummaryScreen'), { loading: Spinner })
+const EndGameScreen      = dynamic(() => import('@/components/screens/EndGameScreen'),       { loading: Spinner })
 
 // ── ポーリング間隔（状態ごとに調整）──────────────────────────
 const POLL_INTERVALS: Partial<Record<string, number>> = {
@@ -383,6 +384,8 @@ export default function GameRoom({ roomCode }: Props) {
             return <ResultScreen gameState={gameState} playerId={playerId} onAction={handleAction} />
           case 'ROUND_SUMMARY':
             return <RoundSummaryScreen gameState={gameState} playerId={playerId} roomCode={roomCode} onAction={handleAction} />
+          case 'END_GAME':
+            return <EndGameScreen gameState={gameState} playerId={playerId} roomCode={roomCode} onAction={handleAction} />
           default:
             return (
               <div className="min-h-dvh flex items-center justify-center">

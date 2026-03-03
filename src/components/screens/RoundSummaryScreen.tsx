@@ -439,15 +439,23 @@ export default function RoundSummaryScreen({ gameState, playerId, roomCode, onAc
         </button>
 
         {isHost ? (
-          <button
-            onClick={() => onAction('next-round')}
-            className="btn-primary w-full text-xl py-4"
-          >
-            ▶️ 次のラウンドへ
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => onAction('next-round')}
+              className="btn-primary w-full text-xl py-4"
+            >
+              ▶️ もう1ラウンド！
+            </button>
+            <button
+              onClick={() => onAction('end-game')}
+              className="w-full py-3 rounded-2xl text-gray-500 font-bold text-sm border border-gray-200 bg-white/50 active:scale-95 transition-all"
+            >
+              🏁 ゲームを終了する
+            </button>
+          </div>
         ) : (
           <div className="glass rounded-2xl py-3 text-center">
-            <p className="text-gray-500 text-sm">⏳ ホストが次のラウンドを始めます</p>
+            <p className="text-gray-500 text-sm">⏳ ホストが次の操作を選んでいます</p>
           </div>
         )}
       </div>

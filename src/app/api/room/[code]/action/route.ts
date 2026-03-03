@@ -439,6 +439,36 @@ export async function POST(
     }
 
     // ========================
+    // end-game（ゲームを終了する）
+    // ========================
+    if (action === 'end-game') {
+      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (state !== 'ROUND_SUMMARY') return err(`現在 ${state} 状態のためゲーム終了できません`)
+
+      const { error } = await updateRoom({ state: 'END_GAME' })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // ========================
+    // new-game（同じメンバーで新しいゲームを始める）
+    // ========================
+    if (action === 'new-game') {
+      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (state !== 'END_GAME') return err(`現在 ${state} 状態のため新しいゲームを始められません`)
+
+      const { error } = await updateRoom({
+        state: 'WAITING_PLAYERS',
+        current_round: 1,
+        asker_player_id: null,
+        current_guess_rank: null,
+        gui_mode: false,
+      })
+      if (error) throw error
+      return NextResponse.json({ ok: true })
+    }
+
+    // ========================
     // kick-player
     // ========================
     if (action === 'kick-player') {
