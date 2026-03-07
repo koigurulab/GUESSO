@@ -100,6 +100,7 @@ export const PERSON_RANK_THEMES: Theme[] = [
   { id: 'pr-night',     title: '夜が強そうなのは誰？',           emoji: '🌙', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
   { id: 'pr-erotic',    title: '正直エロそうなのは誰？',         emoji: '🔥', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
   { id: 'pr-ds',        title: '一番ドSそうなのは誰？',          emoji: '😈', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
+  { id: 'pr-count',     title: '1番経験人数が多そうなのは誰？',  emoji: '🔢', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
   // 😈 毒舌・キャラ系
   { id: 'pr-cheat',     title: '浮気しそうなのは誰？',           emoji: '💔', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
   { id: 'pr-drunk',     title: '酔ったら面倒くさそうなのは誰？', emoji: '🍺', category: 'person-rank', is_free: false, is_person_rank: true, items: [] },
@@ -117,7 +118,7 @@ export const PERSON_RANK_GENRES = [
   {
     id: 'vibe',
     label: '🔥 本音・フェロモン系',
-    themeIds: ['pr-charisma', 'pr-night', 'pr-erotic', 'pr-ds'],
+    themeIds: ['pr-charisma', 'pr-night', 'pr-erotic', 'pr-ds', 'pr-count'],
   },
   {
     id: 'roast',
