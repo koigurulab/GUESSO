@@ -65,7 +65,7 @@ export default function LobbyScreen({ gameState, playerId, roomCode, onAction }:
                   onClick={() => onAction('kick-player', { kick_player_id: p.id })}
                   className="text-red-400 text-xs hover:text-red-600"
                 >
-                  退出
+                  退出させる
                 </button>
               )}
             </div>
