@@ -50,7 +50,9 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="text-center mb-8 animate-fade-in">
         <p className="text-gray-500 text-xs mb-1">ラウンド {room.current_round} · {theme?.title} {theme?.emoji}</p>
-        <h2 className="text-2xl font-black text-gray-900">📌 ヒント！{hintRank}位はこの人！</h2>
+        <h2 className="text-2xl font-black text-gray-900">
+          📌 ヒント！{hintRank}位は{isPersonRank ? 'この人！' : 'これ！'}
+        </h2>
         <p className="text-gray-600 text-sm mt-1">
           <span className="text-yellow-600 font-bold">{asker?.name}</span> さんのランキング
         </p>
