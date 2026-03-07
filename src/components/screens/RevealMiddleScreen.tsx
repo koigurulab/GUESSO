@@ -44,20 +44,27 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
     return (theme?.items ?? []).filter(i => i.id !== middleValue)
   })()
 
+  const totalGuesses = round?.rank_sequence?.length ?? 0
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="text-center mb-8 animate-fade-in">
         <p className="text-gray-500 text-xs mb-1">ラウンド {room.current_round} · {theme?.title} {theme?.emoji}</p>
-        <h2 className="text-2xl font-black text-gray-900">{hintRank}位が公開！</h2>
+        <h2 className="text-2xl font-black text-gray-900">📌 ヒント！{hintRank}位はこの人！</h2>
         <p className="text-gray-600 text-sm mt-1">
           <span className="text-yellow-600 font-bold">{asker?.name}</span> さんのランキング
         </p>
+        {isPersonRank && totalGuesses > 0 && (
+          <p className="text-gray-400 text-xs mt-2">
+            ここからみんなで {totalGuesses} 回、誰が何位かを当てていくよ！
+          </p>
+        )}
       </div>
 
       {/* ヒント位置の公開 */}
       {middleLabel && (
         <div className="animate-bounce-in mb-8">
-          <p className="text-center text-gray-500 text-sm mb-3">{hintRank}位（真ん中）は...</p>
+          <p className="text-center text-gray-500 text-sm mb-3">{asker?.name} さんの{hintRank}位は...</p>
           <div className="glass-strong rounded-3xl p-8 text-center shadow-xl shadow-purple-100">
             {middleLabel.emoji ? (
               <div className="text-8xl mb-3 animate-pop">{middleLabel.emoji}</div>
@@ -86,7 +93,9 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
       )}
 
       <p className="text-gray-500 text-sm text-center mb-4">
-        1位は{isPersonRank ? '誰' : '何'}だと思う？
+        {isPersonRank
+          ? `まず1位を予想しよう！（全部で${totalGuesses}回予想するよ）`
+          : '1位は何だと思う？'}
       </p>
 
       {isHost ? (

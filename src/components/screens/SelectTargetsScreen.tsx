@@ -46,11 +46,12 @@ export default function SelectTargetsScreen({ gameState, playerId, onAction }: P
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4">
         <div className="text-center animate-bounce-in">
-          <div className="text-6xl mb-4">👥</div>
+          <div className="text-6xl mb-4">👀</div>
           <h2 className="text-2xl font-black text-gray-900 mb-2">
             {asker?.name} さんが
           </h2>
-          <p className="text-gray-600 text-lg">ランク付けする人を選んでいます...</p>
+          <p className="text-gray-600 text-lg">誰をランク付けするか選んでいます</p>
+          <p className="text-gray-400 text-sm mt-1">あなたは選ばれる？</p>
           <div className="mt-6 flex gap-1 justify-center">
             {[0, 1, 2].map(i => (
               <div
@@ -77,10 +78,10 @@ export default function SelectTargetsScreen({ gameState, playerId, onAction }: P
         <div className="text-3xl mb-1">{theme?.emoji}</div>
         <h2 className="text-xl font-black gradient-text">{theme?.title}</h2>
         <p className="text-gray-600 text-sm mt-2">
-          誰を選択肢にする？<strong>3〜7人</strong>選んでね
+          正直にランク付けする人を <strong>3〜7人</strong> 選んでね
         </p>
         <p className="text-gray-500 text-xs mt-1">
-          選んだ人の中で正直に答えてもらうよ👀
+          選んだ全員をこっそりランク付け！みんながあなたの答えを当てにくるよ
         </p>
       </div>
 
@@ -135,7 +136,7 @@ export default function SelectTargetsScreen({ gameState, playerId, onAction }: P
         disabled={submitting || selected.size < 3}
         className="btn-primary w-full text-xl py-4 disabled:opacity-40"
       >
-        {submitting ? '送信中...' : `✅ ${selected.size}人で確定！`}
+        {submitting ? '送信中...' : `✅ この${selected.size}人でランク付けスタート！`}
       </button>
     </div>
   )

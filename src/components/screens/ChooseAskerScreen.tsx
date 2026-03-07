@@ -23,8 +23,28 @@ export default function ChooseAskerScreen({ gameState, playerId, onAction }: Pro
         <p className="text-gray-500 text-sm mt-1">誰の価値観を当てる？</p>
       </div>
 
-      {/* Theme items preview */}
-      {theme && (
+      {/* 人ランキング: ルール説明パネル */}
+      {theme?.is_person_rank && (
+        <div className="glass rounded-3xl p-4 mb-5 animate-fade-in">
+          <p className="text-center font-black text-gray-800 text-sm mb-3">👥 人ランキングの遊び方</p>
+          <div className="space-y-2.5">
+            {[
+              { step: '①', text: <>出題者が <strong>3〜7人</strong> を選んでこっそりランク付け</> },
+              { step: '②', text: <>3位だけ全員に公開（ヒント！）</> },
+              { step: '③', text: <>出題者が <strong>誰を何位にしたか</strong> をみんなで当てにいく！</> },
+              { step: '④', text: <>外したらグイ 🍺（グイモードをONにすると発動）</> },
+            ].map(({ step, text }) => (
+              <div key={step} className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="text-purple-500 font-black shrink-0">{step}</span>
+                <span>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 通常テーマ: アイテムプレビュー */}
+      {theme && !theme.is_person_rank && (
         <div className="glass rounded-3xl p-4 mb-5 animate-fade-in">
           <p className="text-gray-500 text-xs mb-2 text-center">このテーマのアイテム</p>
           <div className="flex flex-wrap gap-2 justify-center">

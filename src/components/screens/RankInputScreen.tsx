@@ -141,7 +141,12 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
           <h2 className="text-2xl font-black text-gray-900 mb-2">
             {asker?.name} さんが
           </h2>
-          <p className="text-gray-600 text-lg">ランキングを入力中...</p>
+          <p className="text-gray-600 text-lg">
+            {isPersonRank ? '正直にランク付け中...' : 'ランキングを入力中...'}
+          </p>
+          {isPersonRank && (
+            <p className="text-gray-400 text-sm mt-1">あなたは何位？</p>
+          )}
           <div className="mt-6 flex gap-1 justify-center">
             {[0, 1, 2].map(i => (
               <div
@@ -187,9 +192,11 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
         <div className="text-3xl mb-1">{theme?.emoji}</div>
         <h2 className="text-xl font-black gradient-text">{theme?.title}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {isPersonRank ? '正直な順にランク付けしよう' : 'あなたにとって大切な順に並べよう'}
+          {isPersonRank ? '正直な気持ちで並べよう' : 'あなたにとって大切な順に並べよう'}
         </p>
-        <p className="text-gray-400 text-xs mt-1">↑ 1位が一番 ↓</p>
+        <p className="text-gray-400 text-xs mt-1">
+          {isPersonRank ? '1位 = 最もそう思う人　／　最下位 = 最もそう思わない人' : '↑ 1位が一番 ↓'}
+        </p>
       </div>
 
       {confirmed ? (
@@ -231,11 +238,11 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
           {hintIndex >= 0 && (
             <div className="mt-5 glass rounded-3xl p-4 mb-4 text-center">
               <p className="text-gray-600 text-xs">
-                📌 {hintIndex + 1}位（真ん中）の{' '}
+                📌 確定後、{hintIndex + 1}位の{' '}
                 <strong className="text-pink-600">
                   {items[hintIndex]?.emoji}{items[hintIndex]?.label}
                 </strong>{' '}
-                だけが全員に公開されます
+                がヒントとして公開される。その後みんながあなたのランキングを当てにくるよ！
               </p>
             </div>
           )}
@@ -243,7 +250,7 @@ export default function RankInputScreen({ gameState, playerId, onAction }: Props
           {hintIndex < 0 && isPersonRank && (
             <div className="mt-5 glass rounded-3xl p-4 mb-4 text-center">
               <p className="text-gray-600 text-xs">
-                📌 ヒントなし！正直にランク付けしよう
+                📌 ヒントなし！確定後すぐにみんながあなたのランキングを当てにくるよ
               </p>
             </div>
           )}

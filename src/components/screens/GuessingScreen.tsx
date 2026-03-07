@@ -69,13 +69,30 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
     setSubmitting(false)
   }
 
+  const rankSequence = round?.rank_sequence ?? []
+  const totalGuesses = rankSequence.length
+  const currentGuessIdx = rankSequence.indexOf(currentRank)
+  const remainingRanks = currentGuessIdx >= 0 ? rankSequence.slice(currentGuessIdx + 1) : []
+
   if (isAsker) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4">
         <div className="text-center animate-fade-in">
           <div className="text-6xl mb-4">🙈</div>
           <h2 className="text-2xl font-black text-gray-900 mb-2">あなたは出題者！</h2>
-          <p className="text-gray-600">みんなが{currentRank}位を予想してるよ...</p>
+          <p className="text-gray-600">みんながあなたの {currentRank}位を当てようとしてるよ...</p>
+          {isPersonRank && totalGuesses > 0 && (
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="glass rounded-full px-3 py-0.5 text-xs text-purple-700 font-bold">
+                予想 {currentGuessIdx + 1} / {totalGuesses}
+              </span>
+              {remainingRanks.length > 0 && (
+                <span className="text-xs text-gray-400">
+                  次: {remainingRanks.map(r => `${r}位`).join('→')}
+                </span>
+              )}
+            </div>
+          )}
           <div className="mt-6 glass rounded-2xl p-4 text-center">
             <p className="text-3xl font-black text-gray-900">{guess_count}</p>
             <p className="text-gray-500 text-sm">/{guesserCount}人 予想済み</p>
@@ -101,7 +118,19 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
         <p className="text-gray-500 text-xs mb-1">
           ラウンド {room.current_round} · {asker?.name} さんの{isPersonRank ? 'ランキング' : '価値観'}
         </p>
-        <h2 className="text-xl font-black gradient-text">{currentRank}位を予想しよう！</h2>
+        <h2 className="text-xl font-black gradient-text">{currentRank}位を当てよう！</h2>
+        {isPersonRank && totalGuesses > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <span className="glass rounded-full px-3 py-0.5 text-xs text-purple-700 font-bold">
+              予想 {currentGuessIdx + 1} / {totalGuesses}
+            </span>
+            {remainingRanks.length > 0 && (
+              <span className="text-xs text-gray-400">
+                次: {remainingRanks.map(r => `${r}位`).join('→')}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 公開済みランク（ヒント） */}
