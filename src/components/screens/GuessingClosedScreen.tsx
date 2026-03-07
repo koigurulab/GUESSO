@@ -10,7 +10,8 @@ interface Props {
 
 export default function GuessingClosedScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, guess_count } = gameState
-  const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const isAsker = room.asker_player_id === playerId
+  const asker = players.find(p => p.id === room.asker_player_id)
   const guesserCount = players.filter(p => p.id !== room.asker_player_id).length
 
   return (
@@ -35,7 +36,7 @@ export default function GuessingClosedScreen({ gameState, playerId, onAction }: 
           </div>
           <p className="text-gray-500 text-sm">結果を公開しましょう！</p>
         </div>
-        {isHost ? (
+        {isAsker ? (
           <button
             onClick={() => onAction('reveal-result')}
             className="mt-6 btn-primary text-xl px-10 py-4"
@@ -44,7 +45,7 @@ export default function GuessingClosedScreen({ gameState, playerId, onAction }: 
           </button>
         ) : (
           <div className="mt-6 glass rounded-2xl py-4 px-6">
-            <p className="text-gray-500 text-sm">⏳ ホストが結果を公開します...</p>
+            <p className="text-gray-500 text-sm">⏳ {asker?.name} さんが結果を公開します...</p>
           </div>
         )}
       </div>

@@ -11,7 +11,7 @@ interface Props {
 
 export default function RevealMiddleScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, theme, round } = gameState
-  const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const isAsker = room.asker_player_id === playerId
   const asker = players.find(p => p.id === room.asker_player_id)
   const isPersonRank = round?.is_person_rank ?? false
 
@@ -98,7 +98,7 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
           : '1位は何だと思う？'}
       </p>
 
-      {isHost ? (
+      {isAsker ? (
         <div className="w-full max-w-sm space-y-3">
           <button
             onClick={() => onAction('open-guessing')}
@@ -115,7 +115,7 @@ export default function RevealMiddleScreen({ gameState, playerId, onAction }: Pr
         </div>
       ) : (
         <div className="glass rounded-2xl py-4 px-6 text-center w-full max-w-sm">
-          <p className="text-gray-500 text-sm">⏳ ホストが予想をオープンするのを待ってます</p>
+          <p className="text-gray-500 text-sm">⏳ {asker?.name} さんが予想をオープンするのを待ってます</p>
         </div>
       )}
     </div>

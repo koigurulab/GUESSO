@@ -18,7 +18,7 @@ function calcMostGuessed(guesses: Array<{ guess_top1: string }> | null) {
 
 export default function ResultScreen({ gameState, playerId, onAction }: Props) {
   const { room, players, theme, round, guesses, my_guess } = gameState
-  const isHost = players.find(p => p.id === playerId)?.is_host ?? false
+  const isAsker = room.asker_player_id === playerId
   const guiMode = room.gui_mode
   const asker = players.find(p => p.id === round?.asker_player_id)
   const ranking = round?.ranking_json
@@ -225,7 +225,7 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
 
       {/* ボタン */}
       <div className="space-y-3">
-        {isHost && !isFinalRank && (
+        {isAsker && !isFinalRank && (
           <button
             onClick={() => onAction('next-rank')}
             className="btn-primary w-full text-xl py-4"
@@ -233,7 +233,7 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
             ▶️ {nextRank}位を予想する
           </button>
         )}
-        {isHost && isFinalRank && (
+        {isAsker && isFinalRank && (
           <button
             onClick={() => onAction('show-summary')}
             className="btn-primary w-full text-xl py-4"
@@ -241,10 +241,10 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
             🏆 ラウンド結果を見る
           </button>
         )}
-        {!isHost && (
+        {!isAsker && (
           <div className="glass rounded-2xl py-3 text-center">
             <p className="text-gray-500 text-sm">
-              {isFinalRank ? '⏳ ホストがラウンド結果を表示します' : `⏳ ホストが${nextRank}位の予想を始めます`}
+              {isFinalRank ? `⏳ ${asker?.name} さんがラウンド結果を表示します` : `⏳ ${asker?.name} さんが${nextRank}位の予想を始めます`}
             </p>
           </div>
         )}

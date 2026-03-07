@@ -237,7 +237,7 @@ export async function POST(
     // open-guessing
     // ========================
     if (action === 'open-guessing') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'REVEAL_MIDDLE') return err(`現在 ${state} 状態のため予想オープンできません`)
 
       const { error } = await updateRoom({ state: 'GUESSING_OPEN', current_guess_rank: 1 })
@@ -280,7 +280,7 @@ export async function POST(
     // close-guess
     // ========================
     if (action === 'close-guess') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'GUESSING_OPEN') return err(`現在 ${state} 状態のため締切できません`)
 
       const { error } = await updateRoom({ state: 'GUESSING_CLOSED' })
@@ -292,7 +292,7 @@ export async function POST(
     // reveal-result
     // ========================
     if (action === 'reveal-result') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'GUESSING_CLOSED') return err(`現在 ${state} 状態のため結果公開できません`)
 
       const { error } = await updateRoom({ state: 'RESULT_REVEALED' })
@@ -304,7 +304,7 @@ export async function POST(
     // show-summary（ラウンドサマリーへ移行）
     // ========================
     if (action === 'show-summary') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'RESULT_REVEALED') return err(`現在 ${state} 状態のためサマリーに進めません`)
 
       // rank_sequence の最後のランクまで予想したか確認
@@ -366,7 +366,7 @@ export async function POST(
     // next-rank（同テーマで次の順位を予想）
     // ========================
     if (action === 'next-rank') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'RESULT_REVEALED') return err(`現在 ${state} 状態のため次の順位に進めません`)
 
       // rank_sequence を取得して次のランクを決定

@@ -97,14 +97,12 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
             <p className="text-3xl font-black text-gray-900">{guess_count}</p>
             <p className="text-gray-500 text-sm">/{guesserCount}人 予想済み</p>
           </div>
-          {isHost && (
-            <button
-              onClick={() => onAction('close-guess')}
-              className="mt-6 btn-primary text-lg px-8"
-            >
-              🔔 締め切る
-            </button>
-          )}
+          <button
+            onClick={() => onAction('close-guess')}
+            className="mt-6 btn-primary text-lg px-8"
+          >
+            🔔 締め切る
+          </button>
         </div>
       </div>
     )
@@ -173,14 +171,6 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
             <p className="text-2xl font-black text-gray-900">{guess_count}</p>
             <p className="text-gray-500 text-sm">/{guesserCount}人 予想済み</p>
           </div>
-          {isHost && (
-            <button
-              onClick={() => onAction('close-guess')}
-              className="mt-6 btn-primary text-lg px-8"
-            >
-              🔔 締め切る
-            </button>
-          )}
         </div>
       ) : (
         <>
@@ -210,7 +200,7 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
           </div>
 
           {/* 送信ボタン */}
-          <div className="mt-4 space-y-3">
+          <div className="mt-4">
             {selected && selectedInfo && (
               <button
                 onClick={handleConfirm}
@@ -223,14 +213,6 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
                     <span>「{selectedInfo.label}」で送信</span>
                   </>
                 )}
-              </button>
-            )}
-            {isHost && (
-              <button
-                onClick={() => onAction('close-guess')}
-                className="btn-secondary w-full"
-              >
-                🔔 今すぐ締め切る
               </button>
             )}
           </div>
