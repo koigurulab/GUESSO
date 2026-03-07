@@ -390,6 +390,32 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
 
       </div>
 
+      {/* 参加者管理（ホストのみ） */}
+      {isHost && (
+        <div className="mt-4 glass rounded-2xl p-4">
+          <p className="text-gray-500 text-xs mb-3">参加者 {players.length}人</p>
+          <div className="space-y-2">
+            {players.map(p => (
+              <div key={p.id} className="flex items-center gap-2">
+                <span className="text-lg">{p.is_host ? '👑' : '😊'}</span>
+                <span className="flex-1 text-sm font-semibold text-gray-800">
+                  {p.name}
+                  {p.id === playerId && <span className="text-gray-400 text-xs ml-1">（あなた）</span>}
+                </span>
+                {!p.is_host && (
+                  <button
+                    onClick={() => onAction('kick-player', { kick_player_id: p.id })}
+                    className="text-xs text-red-400 font-bold glass rounded-xl px-3 py-1 active:scale-95 transition-all"
+                  >
+                    退出
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!isHost && (
         <div className="mt-4 glass rounded-2xl py-4 text-center">
           <p className="text-gray-500 text-sm">⏳ ホストがテーマを選んでいます...</p>
