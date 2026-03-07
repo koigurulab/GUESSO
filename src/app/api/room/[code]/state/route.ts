@@ -46,9 +46,10 @@ export async function GET(
       .eq('room_code', code)
       .order('joined_at', { ascending: true })
 
-    // ── ④ ホスト離脱検出 → 自動移譲 ────────────────────────────────────
-    // ホストの last_seen が60秒以上前なら次のプレイヤーへ移譲（fire-and-forget）
-    if (players && players.length >= 2) {
+    // ── ④ ホスト離脱検出 → 自動移譲（ロビー待機中のみ）────────────────
+    // ゲーム中は asker_player_id と is_host が乖離してゲームが詰むため、
+    // WAITING_PLAYERS 状態でのみ自動移譲する
+    if (room.state === 'WAITING_PLAYERS' && players && players.length >= 2) {
       const hostPlayer = players.find(p => p.is_host)
       if (hostPlayer?.last_seen) {
         const offlineSec = (Date.now() - new Date(hostPlayer.last_seen).getTime()) / 1000
