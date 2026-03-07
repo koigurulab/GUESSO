@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getThemeItem } from '@/lib/themes'
 import type { RoomStateResponse, ThemeItem } from '@/lib/types'
 
@@ -58,6 +58,14 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
   const [selected, setSelected] = useState<string>(my_guess ?? '')
   const [submitted, setSubmitted] = useState(!!my_guess)
   const [submitting, setSubmitting] = useState(false)
+
+  // ランクが切り替わった時（ポーリングがスキップしてコンポーネントが再マウントされなかった場合）にリセット
+  useEffect(() => {
+    setSelected(my_guess ?? '')
+    setSubmitted(!!my_guess)
+    setSubmitting(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRank])
 
   const guesserCount = players.filter(p => p.id !== room.asker_player_id).length
 

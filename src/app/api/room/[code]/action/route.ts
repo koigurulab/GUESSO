@@ -315,10 +315,7 @@ export async function POST(
         .eq('round_no', room.current_round)
         .single()
 
-      const isPersonRankRound = round?.is_person_rank ?? false
-      const rankSeq = isPersonRankRound
-        ? ((round?.rank_sequence as number[] | null) ?? [1])
-        : [1]
+      const rankSeq = (round?.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
       const lastRank = rankSeq[rankSeq.length - 1]
       if (room.current_guess_rank !== lastRank) {
         return err('まだ全ての順位を予想し終えていません')
@@ -380,10 +377,7 @@ export async function POST(
         .eq('round_no', room.current_round)
         .single()
 
-      const isPersonRankRound2 = round?.is_person_rank ?? false
-      const rankSeq = isPersonRankRound2
-        ? ((round?.rank_sequence as number[] | null) ?? [1])
-        : [1]
+      const rankSeq = (round?.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
       const currentIdx = rankSeq.indexOf(room.current_guess_rank ?? -1)
       if (currentIdx === -1 || currentIdx >= rankSeq.length - 1) {
         return err('全ての順位を予想し終えています。show-summaryを使ってください')

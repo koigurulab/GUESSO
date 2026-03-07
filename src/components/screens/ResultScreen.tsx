@@ -28,8 +28,7 @@ export default function ResultScreen({ gameState, playerId, onAction }: Props) {
   // 人ランキング対象プレイヤーID一覧
   const targetPlayerIds = round?.target_player_ids ?? null
 
-  // ランク配列（通常テーマは1位のみ、人ランキングはDBの値）
-  const rankSeq = isPersonRank ? (round?.rank_sequence ?? [1]) : [1]
+  const rankSeq = round?.rank_sequence ?? [1, 2, 3, 5, 6]
   const currentRankIdx = rankSeq.indexOf(currentRank)
   const nextRank = currentRankIdx < rankSeq.length - 1 ? rankSeq[currentRankIdx + 1] : null
   const isFinalRank = nextRank === null
