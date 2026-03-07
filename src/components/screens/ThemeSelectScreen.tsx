@@ -407,7 +407,7 @@ export default function ThemeSelectScreen({ gameState, playerId, roomCode, onAct
                     onClick={() => onAction('kick-player', { kick_player_id: p.id })}
                     className="text-xs text-red-400 font-bold glass rounded-xl px-3 py-1 active:scale-95 transition-all"
                   >
-                    退出
+                    退出させる
                   </button>
                 )}
               </div>
