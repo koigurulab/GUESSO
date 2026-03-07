@@ -98,7 +98,10 @@ export async function GET(
         // 人ランキング N>=5: hint = rank 3, 予想外順位 = rank N
         // 人ランキング N<5: hint なし, 予想外順位 = rank N
         const isPersonRank = round.is_person_rank ?? false
-        const rankSeq: number[] = (round.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
+        // 通常テーマは1位のみ予想（rank_sequence未設定）、人ランキングはDBの値を使用
+        const rankSeq: number[] = isPersonRank
+          ? ((round.rank_sequence as number[] | null) ?? [1])
+          : [1]
         const targetIds: string[] | null = round.target_player_ids as string[] | null
         const N = isPersonRank ? (targetIds?.length ?? 0) : 7
 

@@ -315,7 +315,10 @@ export async function POST(
         .eq('round_no', room.current_round)
         .single()
 
-      const rankSeq = (round?.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
+      const isPersonRankRound = round?.is_person_rank ?? false
+      const rankSeq = isPersonRankRound
+        ? ((round?.rank_sequence as number[] | null) ?? [1])
+        : [1]
       const lastRank = rankSeq[rankSeq.length - 1]
       if (room.current_guess_rank !== lastRank) {
         return err('まだ全ての順位を予想し終えていません')
@@ -377,7 +380,10 @@ export async function POST(
         .eq('round_no', room.current_round)
         .single()
 
-      const rankSeq = (round?.rank_sequence as number[] | null) ?? [1, 2, 3, 5, 6]
+      const isPersonRankRound2 = round?.is_person_rank ?? false
+      const rankSeq = isPersonRankRound2
+        ? ((round?.rank_sequence as number[] | null) ?? [1])
+        : [1]
       const currentIdx = rankSeq.indexOf(room.current_guess_rank ?? -1)
       if (currentIdx === -1 || currentIdx >= rankSeq.length - 1) {
         return err('全ての順位を予想し終えています。show-summaryを使ってください')
@@ -393,7 +399,7 @@ export async function POST(
     // back-to-theme（テーマ選択に戻る）
     // ========================
     if (action === 'back-to-theme') {
-      if (!isHost) return err('ホストのみ操作できます', 403)
+      if (!isHost && player_id !== room.asker_player_id) return err('ホストまたは出題者のみ操作できます', 403)
       const allowed = ['SELECT_ASKER', 'SELECT_TARGETS', 'ASKER_RANKING', 'REVEAL_MIDDLE']
       if (!allowed.includes(state)) return err(`現在 ${state} 状態のためテーマ選択に戻れません`)
 

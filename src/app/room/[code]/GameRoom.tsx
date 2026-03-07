@@ -218,9 +218,13 @@ export default function GameRoom({ roomCode }: Props) {
       if (!res.ok) {
         const data = await res.json()
 
-        // 状態ズレによる競合エラーは静かにリフレッシュして終了
+        // 状態ズレによる競合エラーはリフレッシュして終了
         // （「現在 X 状態のため〜」系メッセージ）
         if (res.status === 400 && typeof data.error === 'string' && data.error.includes('状態のため')) {
+          // 予想締め切り済みの場合のみ通知
+          if (action === 'submit-guess') {
+            showActionError('締め切られました。次の結果をお待ちください')
+          }
           updatedAtRef.current = ''
           await fetchState()
           setActionPending(false)
