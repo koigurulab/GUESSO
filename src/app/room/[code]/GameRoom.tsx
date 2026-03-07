@@ -28,10 +28,10 @@ const EndGameScreen      = dynamic(() => import('@/components/screens/EndGameScr
 
 // ── ポーリング間隔（状態ごとに調整）──────────────────────────
 const POLL_INTERVALS: Partial<Record<string, number>> = {
-  WAITING_PLAYERS: 5000,
-  GUESSING_OPEN:   2000,
+  WAITING_PLAYERS: 3000,
+  GUESSING_OPEN:   1000,
 }
-const DEFAULT_POLL_MS = 3000
+const DEFAULT_POLL_MS = 1500
 
 // last_seen を更新する間隔
 const LAST_SEEN_INTERVAL_MS = 30_000
@@ -61,6 +61,8 @@ export default function GameRoom({ roomCode }: Props) {
   const [actionError, setActionError] = useState<string | null>(null)
   /** 連続ポーリング失敗時の「接続中...」バナー */
   const [isOffline, setIsOffline] = useState(false)
+  /** アクション実行中フラグ（ボタンの連打防止＆ローディング表示） */
+  const [actionPending, setActionPending] = useState(false)
 
   // ── ポーリング制御用 ref ──────────────────────────────────
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
@@ -199,6 +201,9 @@ export default function GameRoom({ roomCode }: Props) {
   // Action handler
   const handleAction = useCallback(async (action: string, params: Record<string, unknown> = {}): Promise<boolean> => {
     if (!playerId) return false
+    if (actionPending) return false
+
+    setActionPending(true)
 
     const doFetch = () => fetch(`/api/room/${roomCode}/action`, {
       method: 'POST',
@@ -218,10 +223,12 @@ export default function GameRoom({ roomCode }: Props) {
         if (res.status === 400 && typeof data.error === 'string' && data.error.includes('状態のため')) {
           updatedAtRef.current = ''
           await fetchState()
+          setActionPending(false)
           return false
         }
 
         showActionError(data.error ?? 'エラーが発生しました')
+        setActionPending(false)
         return false
       }
 
@@ -233,6 +240,7 @@ export default function GameRoom({ roomCode }: Props) {
       })
       updatedAtRef.current = ''
       await fetchState()
+      setActionPending(false)
       return true
     } catch {
       // ネットワークエラー: 1回だけ自動リトライ
@@ -242,19 +250,22 @@ export default function GameRoom({ roomCode }: Props) {
         if (!retry.ok) {
           const data = await retry.json()
           showActionError(data.error ?? '操作に失敗しました。もう一度お試しください')
+          setActionPending(false)
           return false
         }
         trackEvent('game_action', { action, room_code: roomCode, retried: true })
         updatedAtRef.current = ''
         await fetchState()
+        setActionPending(false)
         return true
       } catch {
         // リトライも失敗 → トーストで通知（alertではない）
         showActionError('通信に失敗しました。少し待って再度お試しください')
+        setActionPending(false)
         return false
       }
     }
-  }, [roomCode, playerId, fetchState, showActionError])
+  }, [roomCode, playerId, actionPending, fetchState, showActionError])
 
   // Join handler
   const handleJoin = async (e: React.FormEvent) => {
@@ -344,10 +355,20 @@ export default function GameRoom({ roomCode }: Props) {
   }
 
   const state = gameState.room.state
-  const commonProps = { gameState, playerId, roomCode, onAction: handleAction }
+  const commonProps = { gameState, playerId, roomCode, onAction: handleAction, actionPending }
 
   return (
     <>
+      {/* ── アクション実行中オーバーレイ ── */}
+      {actionPending && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.15)' }}>
+          <div className="glass rounded-2xl px-6 py-4 flex items-center gap-3 shadow-xl">
+            <span className="inline-block w-5 h-5 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />
+            <span className="text-sm font-bold text-gray-800">送信中...</span>
+          </div>
+        </div>
+      )}
+
       {/* ── 接続中バナー（ポーリング連続失敗時） ── */}
       {isOffline && (
         <div
