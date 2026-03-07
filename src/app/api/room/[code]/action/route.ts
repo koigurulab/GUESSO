@@ -277,13 +277,13 @@ export async function POST(
     }
 
     // ========================
-    // close-guess
+    // close-guess（そのまま RESULT_REVEALED へ）
     // ========================
     if (action === 'close-guess') {
       if (player_id !== room.asker_player_id) return err('出題者のみ操作できます', 403)
       if (state !== 'GUESSING_OPEN') return err(`現在 ${state} 状態のため締切できません`)
 
-      const { error } = await updateRoom({ state: 'GUESSING_CLOSED' })
+      const { error } = await updateRoom({ state: 'RESULT_REVEALED' })
       if (error) throw error
       return NextResponse.json({ ok: true })
     }

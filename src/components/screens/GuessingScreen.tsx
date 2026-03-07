@@ -58,6 +58,7 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
   const [selected, setSelected] = useState<string>(my_guess ?? '')
   const [submitted, setSubmitted] = useState(!!my_guess)
   const [submitting, setSubmitting] = useState(false)
+  const [confirmingClose, setConfirmingClose] = useState(false)
 
   // ランクが切り替わった時（ポーリングがスキップしてコンポーネントが再マウントされなかった場合）にリセット
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
   const remainingRanks = currentGuessIdx >= 0 ? rankSequence.slice(currentGuessIdx + 1) : []
 
   if (isAsker) {
+    const allAnswered = guess_count >= guesserCount
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4">
         <div className="text-center animate-fade-in">
@@ -105,12 +107,34 @@ export default function GuessingScreen({ gameState, playerId, onAction }: Props)
             <p className="text-3xl font-black text-gray-900">{guess_count}</p>
             <p className="text-gray-500 text-sm">/{guesserCount}人 予想済み</p>
           </div>
-          <button
-            onClick={() => onAction('close-guess')}
-            className="mt-6 btn-primary text-lg px-8"
-          >
-            🔔 締め切る
-          </button>
+
+          {confirmingClose ? (
+            <div className="mt-6 glass rounded-2xl p-5 text-center animate-bounce-in">
+              <p className="font-black text-gray-800 mb-1">まだ {guesserCount - guess_count}人 が未回答</p>
+              <p className="text-gray-500 text-sm mb-4">本当に締め切る？</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmingClose(false)}
+                  className="flex-1 glass rounded-2xl py-3 text-sm font-bold text-gray-600 active:scale-95 transition-all"
+                >
+                  戻る
+                </button>
+                <button
+                  onClick={() => onAction('close-guess')}
+                  className="flex-1 btn-primary py-3 text-sm"
+                >
+                  締め切る
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => allAnswered ? onAction('close-guess') : setConfirmingClose(true)}
+              className="mt-6 btn-primary text-lg px-8"
+            >
+              {allAnswered ? '🎊 結果を見る' : '🔔 締め切る'}
+            </button>
+          )}
         </div>
       </div>
     )
